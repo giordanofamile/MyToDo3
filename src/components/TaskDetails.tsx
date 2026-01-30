@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { 
   Calendar as CalendarIcon, 
@@ -16,12 +16,8 @@ import {
   RefreshCw,
   Clock,
   Archive,
-  Layout,
-  ListChecks,
-  Hash,
-  StickyNote,
   Image as ImageIcon,
-  Paperclip
+  Activity
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -43,6 +39,14 @@ interface TaskDetailsProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
 }
+
+const STATUS_OPTIONS = [
+  { value: 'En attente', color: 'bg-gray-500' },
+  { value: 'En cours', color: 'bg-blue-500' },
+  { value: 'En pause', color: 'bg-orange-500' },
+  { value: 'Terminé', color: 'bg-green-500' },
+  { value: 'Annulé', color: 'bg-red-500' },
+];
 
 const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsProps) => {
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -156,7 +160,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </div>
           </div>
 
-          {/* Header Info - Compact */}
+          {/* Header Info */}
           <div className="flex-none p-5 sm:p-6 border-b border-gray-100 dark:border-white/5">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div className="flex-1">
@@ -196,26 +200,16 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
-                <TabsTrigger value="general" className="data-[state=active]:text-blue-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  Général
-                </TabsTrigger>
-                <TabsTrigger value="steps" className="data-[state=active]:text-orange-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  Étapes
-                </TabsTrigger>
-                <TabsTrigger value="files" className="data-[state=active]:text-blue-600 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  Fichiers
-                </TabsTrigger>
-                <TabsTrigger value="org" className="data-[state=active]:text-purple-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  Organisation
-                </TabsTrigger>
-                <TabsTrigger value="notes" className="data-[state=active]:text-teal-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-teal-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  Notes
-                </TabsTrigger>
+                <TabsTrigger value="general" className="data-[state=active]:text-blue-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all">Général</TabsTrigger>
+                <TabsTrigger value="steps" className="data-[state=active]:text-orange-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all">Étapes</TabsTrigger>
+                <TabsTrigger value="files" className="data-[state=active]:text-blue-600 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all">Fichiers</TabsTrigger>
+                <TabsTrigger value="org" className="data-[state=active]:text-purple-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all">Organisation</TabsTrigger>
+                <TabsTrigger value="notes" className="data-[state=active]:text-teal-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-teal-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all">Notes</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-          {/* Content Area - Compact & Borderless */}
+          {/* Content Area */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar">
             <AnimatePresence mode="wait">
               <motion.div
@@ -229,6 +223,28 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 {activeTab === 'general' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Statut</Label>
+                        <Select value={task.status || 'En attente'} onValueChange={(val) => onUpdate(task.id, { status: val })}>
+                          <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                            <div className="flex items-center gap-2">
+                              <Activity className="w-4 h-4 text-blue-500" />
+                              <SelectValue placeholder="Statut" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                            {STATUS_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                <div className="flex items-center gap-2">
+                                  <div className={cn("w-2 h-2 rounded-full", opt.color)} />
+                                  {opt.value}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <div className="space-y-2">
                         <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Priorité</Label>
                         <div className="flex gap-1">
@@ -249,24 +265,6 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                             </button>
                           ))}
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Récurrence</Label>
-                        <Select value={task.recurrence || 'none'} onValueChange={(val) => onUpdate(task.id, { recurrence: val })}>
-                          <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
-                            <div className="flex items-center gap-2">
-                              <RefreshCw className="w-4 h-4 text-blue-500" />
-                              <SelectValue placeholder="Aucune" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-none shadow-2xl">
-                            <SelectItem value="none">Aucune</SelectItem>
-                            <SelectItem value="daily">Quotidien</SelectItem>
-                            <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                            <SelectItem value="monthly">Mensuel</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
 
@@ -386,7 +384,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </AnimatePresence>
           </div>
 
-          {/* Footer - Compact */}
+          {/* Footer */}
           <div className="flex-none p-5 sm:p-6 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <Button
