@@ -9,6 +9,7 @@ import Dashboard from '@/components/Dashboard';
 import TagBadge from '@/components/TagBadge';
 import ShortcutsModal from '@/components/ShortcutsModal';
 import CalendarView from '@/components/CalendarView';
+import ZenFocus from '@/components/ZenFocus';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -174,7 +175,6 @@ const Index = () => {
       position: index
     }));
 
-    // Mise à jour asynchrone en base
     for (const update of updates) {
       await supabase.from('tasks').update({ position: update.position }).eq('id', update.id);
     }
@@ -393,6 +393,16 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased transition-colors duration-500">
+      <AnimatePresence>
+        {isFocusMode && (
+          <ZenFocus 
+            task={selectedTask} 
+            onClose={() => setIsFocusMode(false)}
+            onToggleComplete={updateTask}
+          />
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {!isFocusMode && !isMobile && (
           <motion.div
