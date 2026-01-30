@@ -7,6 +7,7 @@ import TaskDetails from '@/components/TaskDetails';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import Dashboard from '@/components/Dashboard';
 import TagBadge from '@/components/TagBadge';
+import ShortcutsModal from '@/components/ShortcutsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -20,7 +21,9 @@ import {
   Minimize2,
   CheckSquare,
   Square,
-  X
+  X,
+  HelpCircle,
+  GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +37,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import confetti from 'canvas-confetti';
 
 const Index = () => {
@@ -46,9 +50,10 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical'>('created');
+  const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical' | 'manual'>('manual');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +88,8 @@ const Index = () => {
         setIsFocusMode(prev => !prev);
       } else if (e.key.toLowerCase() === 'p') {
         setIsTimerOpen(prev => !prev);
+      } else if (e.key === '?') {
+        setIsShortcutsOpen(true);
       } else if (e.key === 'Escape' && selectionMode) {
         setSelectionMode(false);
         setSelectedIds([]);
@@ -113,11 +120,33 @@ const Index = () => {
       query = query.eq('list_id', activeList);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('position', { ascending: true });
 
     if (error) showError(error.message);
     else setTasks(data || []);
     setLoading(false);
+  };
+
+  const onDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(tasks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Mise à jour optimiste de l'UI
+    setTasks(items);
+    setSortBy('manual');
+
+    // Mise à jour en base de données
+    const updates = items.map((task, index) => ({
+      id: task.id,
+      position: index
+    }));
+
+    for (const update of updates) {
+      await supabase.from('tasks').update({ position: update.position }).eq('id', update.id);
+    }
   };
 
   const addTask = async (e: React.FormEvent) => {
@@ -135,13 +164,14 @@ const Index = () => {
         is_important: activeList === 'important',
         list_id: isCustomList ? activeList : null,
         due_date: activeList === 'planned' ? new Date().toISOString() : null,
+        position: tasks.length,
         tags: []
       }])
       .select();
 
     if (error) showError(error.message);
     else {
-      setTasks([data[0], ...tasks]);
+      setTasks([...tasks, data[0]]);
       setNewTask('');
       showSuccess("Tâche ajoutée");
     }
@@ -163,12 +193,13 @@ const Index = () => {
         is_completed: false,
         due_date: nextDate.toISOString(),
         created_at: undefined,
-        updated_at: undefined
+        updated_at: undefined,
+        position: tasks.length
       }])
       .select();
 
     if (!error && data) {
-      setTasks(prev => [data[0], ...prev]);
+      setTasks(prev => [...prev, data[0]]);
       showSuccess(`Nouvelle occurrence créée pour ${format(nextDate, 'd MMM')}`);
     }
   };
@@ -240,7 +271,8 @@ const Index = () => {
   const sortedTasks = [...tasks].sort((a, b) => {
     if (sortBy === 'importance') return (b.is_important ? 1 : 0) - (a.is_important ? 1 : 0);
     if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (sortBy === 'created') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    return a.position - b.position;
   });
 
   const filteredTasks = sortedTasks.filter(task => {
@@ -316,6 +348,15 @@ const Index = () => {
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    onClick={() => setIsShortcutsOpen(true)}
+                    className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm"
+                    title="Aide ( ? )"
+                  >
+                    <HelpCircle className="w-5 h-5 text-gray-400" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
                     onClick={() => setSelectionMode(!selectionMode)}
                     className={cn(
                       "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
@@ -356,6 +397,7 @@ const Index = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 dark:bg-[#2C2C2E]">
+                      <DropdownMenuItem onClick={() => setSortBy('manual')} className="rounded-xl">Ordre manuel</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setSortBy('created')} className="rounded-xl">Plus récent</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setSortBy('importance')} className="rounded-xl">Importance</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setSortBy('alphabetical')} className="rounded-xl">Alphabétique</DropdownMenuItem>
@@ -427,49 +469,78 @@ const Index = () => {
               )}
             </header>
 
-            <div className="space-y-3">
-              <AnimatePresence mode="popLayout">
-                {filteredTasks.map((task) => (
-                  <div key={task.id} className="flex items-center gap-3">
-                    {selectionMode && (
-                      <button 
-                        onClick={() => toggleSelection(task.id)}
-                        className="p-2 text-gray-400 hover:text-indigo-500 transition-colors"
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="tasks">
+                {(provided) => (
+                  <div 
+                    {...provided.droppableProps} 
+                    ref={provided.innerRef} 
+                    className="space-y-3"
+                  >
+                    {filteredTasks.map((task, index) => (
+                      <Draggable 
+                        key={task.id} 
+                        draggableId={task.id} 
+                        index={index}
+                        isDragDisabled={sortBy !== 'manual' || selectionMode}
                       >
-                        {selectedIds.includes(task.id) ? <CheckSquare className="w-6 h-6 text-indigo-500" /> : <Square className="w-6 h-6" />}
-                      </button>
-                    )}
-                    <div className="flex-1">
-                      <TaskItem
-                        task={task}
-                        onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })}
-                        onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })}
-                        onDelete={deleteTask}
-                        onClick={setSelectedTask}
-                      />
-                    </div>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={cn(
+                              "flex items-center gap-3 transition-all",
+                              snapshot.isDragging && "scale-105 z-50"
+                            )}
+                          >
+                            {selectionMode ? (
+                              <button 
+                                onClick={() => toggleSelection(task.id)}
+                                className="p-2 text-gray-400 hover:text-indigo-500 transition-colors"
+                              >
+                                {selectedIds.includes(task.id) ? <CheckSquare className="w-6 h-6 text-indigo-500" /> : <Square className="w-6 h-6" />}
+                              </button>
+                            ) : sortBy === 'manual' && (
+                              <div {...provided.dragHandleProps} className="p-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing">
+                                <GripVertical className="w-4 h-4" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <TaskItem
+                                task={task}
+                                onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })}
+                                onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })}
+                                onDelete={deleteTask}
+                                onClick={setSelectedTask}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
                   </div>
-                ))}
-              </AnimatePresence>
-              
-              {!loading && filteredTasks.length === 0 && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-32"
-                >
-                  <div className="w-24 h-24 bg-white/50 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl border border-white dark:border-white/10">
-                    {activeList === 'planned' ? <Calendar className="w-10 h-10 text-gray-300" /> : <Plus className="w-10 h-10 text-gray-300" />}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                    {activeList === 'planned' ? 'Rien de prévu' : 'Prêt à commencer ?'}
-                  </h3>
-                  <p className="text-gray-400 font-medium">
-                    {activeList === 'planned' ? 'Les tâches avec une date apparaîtront ici.' : 'Ajoutez votre première tâche ci-dessous.'}
-                  </p>
-                </motion.div>
-              )}
-            </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+            
+            {!loading && filteredTasks.length === 0 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-32"
+              >
+                <div className="w-24 h-24 bg-white/50 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl border border-white dark:border-white/10">
+                  {activeList === 'planned' ? <Calendar className="w-10 h-10 text-gray-300" /> : <Plus className="w-10 h-10 text-gray-300" />}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                  {activeList === 'planned' ? 'Rien de prévu' : 'Prêt à commencer ?'}
+                </h3>
+                <p className="text-gray-400 font-medium">
+                  {activeList === 'planned' ? 'Les tâches avec une date apparaîtront ici.' : 'Ajoutez votre première tâche ci-dessous.'}
+                </p>
+              </motion.div>
+            )}
           </div>
         )}
 
@@ -549,6 +620,11 @@ const Index = () => {
         <PomodoroTimer 
           isOpen={isTimerOpen} 
           onClose={() => setIsTimerOpen(false)} 
+        />
+
+        <ShortcutsModal 
+          isOpen={isShortcutsOpen} 
+          onClose={() => setIsShortcutsOpen(false)} 
         />
       </main>
     </div>
