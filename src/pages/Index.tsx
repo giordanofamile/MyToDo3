@@ -93,7 +93,7 @@ const Index = () => {
   if (!session) return <Auth />;
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased">
+    <div className="flex h-screen w-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased">
       <AnimatePresence>
         {isFocusMode && <ZenFocus task={selectedTask} onClose={() => setIsFocusMode(false)} onToggleComplete={updateTask} />}
       </AnimatePresence>
@@ -110,15 +110,15 @@ const Index = () => {
       )}
       
       <main className={cn(
-        "flex-1 flex flex-col relative overflow-hidden",
+        "flex-1 flex flex-col relative overflow-hidden h-full",
         currentList?.bg_color || "bg-[#F5F5F7]/40 dark:bg-black/20"
       )}>
-        <div className="relative z-10 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
-          <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 pt-8 sm:pt-16 pb-32">
-            <header className="mb-12">
-              <div className="flex items-center justify-between mb-6">
+        <div className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col w-full h-full px-6 sm:px-10 pt-8 pb-6 overflow-y-auto custom-scrollbar">
+            <header className="mb-8 flex-none">
+              <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
                     {currentList?.name || (activeList === 'my-day' ? 'Ma journée' : activeList === 'important' ? 'Important' : activeList === 'planned' ? 'Planifié' : 'Tâches')}
                   </h1>
                 </div>
@@ -131,44 +131,47 @@ const Index = () => {
               </div>
             </header>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${activeList}-${viewType}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {viewType === 'dashboard' ? (
-                  <Dashboard onClose={() => setViewType('list')} />
-                ) : viewType === 'calendar' ? (
-                  <CalendarView tasks={tasks} onTaskClick={setSelectedTask} />
-                ) : viewType === 'kanban' ? (
-                  <KanbanView tasks={tasks} onTaskClick={setSelectedTask} onUpdateTask={updateTask} />
-                ) : viewType === 'grid' ? (
-                  <GridView tasks={tasks} onTaskClick={setSelectedTask} onToggleComplete={(id, completed) => updateTask(id, { is_completed: completed })} />
-                ) : viewType === 'timeline' ? (
-                  <TimelineView tasks={tasks} onTaskClick={setSelectedTask} />
-                ) : viewType === 'gantt' ? (
-                  <GanttView tasks={tasks} onTaskClick={setSelectedTask} />
-                ) : viewType === 'reports' ? (
-                  <ReportsView tasks={tasks} />
-                ) : (
-                  <div className="space-y-3 max-w-4xl mx-auto">
-                    {tasks.map((task) => (
-                      <TaskItem 
-                        key={task.id} 
-                        task={task} 
-                        onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })} 
-                        onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })} 
-                        onDelete={() => {}} 
-                        onClick={setSelectedTask} 
-                      />
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+            <div className="flex-1 w-full h-full min-h-0">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${activeList}-${viewType}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full h-full"
+                >
+                  {viewType === 'dashboard' ? (
+                    <Dashboard onClose={() => setViewType('list')} />
+                  ) : viewType === 'calendar' ? (
+                    <CalendarView tasks={tasks} onTaskClick={setSelectedTask} />
+                  ) : viewType === 'kanban' ? (
+                    <KanbanView tasks={tasks} onTaskClick={setSelectedTask} onUpdateTask={updateTask} />
+                  ) : viewType === 'grid' ? (
+                    <GridView tasks={tasks} onTaskClick={setSelectedTask} onToggleComplete={(id, completed) => updateTask(id, { is_completed: completed })} />
+                  ) : viewType === 'timeline' ? (
+                    <TimelineView tasks={tasks} onTaskClick={setSelectedTask} />
+                  ) : viewType === 'gantt' ? (
+                    <GanttView tasks={tasks} onTaskClick={setSelectedTask} />
+                  ) : viewType === 'reports' ? (
+                    <ReportsView tasks={tasks} />
+                  ) : (
+                    <div className="space-y-3 w-full pb-20">
+                      {tasks.map((task) => (
+                        <TaskItem 
+                          key={task.id} 
+                          task={task} 
+                          onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })} 
+                          onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })} 
+                          onDelete={() => {}} 
+                          onClick={setSelectedTask} 
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 

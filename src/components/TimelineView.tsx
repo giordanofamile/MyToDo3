@@ -17,7 +17,7 @@ const TimelineView = ({ tasks, onTaskClick }: TimelineViewProps) => {
   const days = eachDayOfInterval({ start, end });
 
   return (
-    <div className="bg-white/50 dark:bg-white/5 backdrop-blur-2xl rounded-[3rem] border border-white/50 dark:border-white/10 overflow-hidden flex flex-col h-[600px]">
+    <div className="bg-white/50 dark:bg-white/5 backdrop-blur-2xl rounded-[3rem] border border-white/50 dark:border-white/10 overflow-hidden flex flex-col h-full">
       <div className="flex border-b border-gray-100 dark:border-white/5 overflow-x-auto no-scrollbar bg-gray-50/50 dark:bg-black/20">
         <div className="flex-none w-48 p-4 font-black text-[10px] uppercase tracking-widest text-gray-400 border-r border-gray-100 dark:border-white/5">
           Tâches
