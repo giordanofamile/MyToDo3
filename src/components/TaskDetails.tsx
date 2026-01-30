@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { 
   Calendar as CalendarIcon, 
@@ -118,9 +118,9 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl h-[90vh] sm:h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-[#F8F9FA] dark:bg-[#1C1C1E]">
-        <div className="flex flex-col h-full">
-          {/* Header - Fixed */}
+      <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-5xl h-[90vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-[#F8F9FA] dark:bg-[#1C1C1E]">
+        <div className="flex flex-col h-full w-full overflow-hidden">
+          {/* Header - Fixed Height */}
           <div className="flex-none p-6 sm:p-8 bg-white dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex-1">
@@ -184,11 +184,11 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="min-h-full"
+                className="w-full"
               >
                 {activeTab === 'general' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -285,7 +285,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         <motion.div 
                           layout
                           key={sub.id} 
-                          className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl group border-none transition-all"
+                          className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl group border-none transition-all shadow-sm"
                         >
                           <button onClick={() => toggleSubtask(sub)} className="transition-transform active:scale-90">
                             {sub.is_completed ? (
@@ -324,7 +324,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   <div className="space-y-8">
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tags</Label>
-                      <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-white/5 rounded-[2rem] min-h-[100px]">
+                      <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-white/5 rounded-[2rem] min-h-[100px] shadow-sm">
                         {task.tags?.map((tag: string) => (
                           <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-8 px-4 text-xs" />
                         ))}
@@ -334,7 +334,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                           </p>
                         )}
                       </div>
-                      <form onSubmit={addTag} className="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-white/5">
+                      <form onSubmit={addTag} className="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-white/5 shadow-sm">
                         <TagIcon className="w-5 h-5 text-purple-500" />
                         <input 
                           placeholder="Nouveau tag (Entrée)"
@@ -348,11 +348,11 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 )}
 
                 {activeTab === 'notes' && (
-                  <div className="space-y-4 h-full">
+                  <div className="space-y-4">
                     <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Notes détaillées</Label>
                     <Textarea
                       placeholder="Écrivez vos pensées, liens ou détails ici..."
-                      className="min-h-[300px] rounded-[2rem] bg-white dark:bg-white/5 border-none shadow-none focus-visible:ring-0 resize-none p-8 text-base leading-relaxed outline-none"
+                      className="min-h-[300px] rounded-[2rem] bg-white dark:bg-white/5 border-none shadow-sm focus-visible:ring-0 resize-none p-8 text-base leading-relaxed outline-none"
                       value={task.notes || ''}
                       onChange={(e) => onUpdate(task.id, { notes: e.target.value })}
                     />
@@ -362,7 +362,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </AnimatePresence>
           </div>
 
-          {/* Footer - Fixed */}
+          {/* Footer - Fixed Height, Always Visible */}
           <div className="flex-none p-6 sm:p-8 bg-white dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
