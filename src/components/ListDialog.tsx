@@ -164,7 +164,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
-            <div className="h-[420px] relative">
+            <div className="h-[420px] overflow-hidden">
               <TabsContent value="general" className="space-y-8 mt-0 h-full">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">NOM DE LA LISTE</Label>
@@ -239,10 +239,9 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 </div>
               </TabsContent>
 
-              <TabsContent value="background" className="mt-0 h-full flex flex-col">
-                <ScrollArea className="flex-1 pr-4 custom-scrollbar">
+              <TabsContent value="background" className="mt-0 h-full">
+                <ScrollArea className="h-full pr-4 custom-scrollbar">
                   <div className="space-y-8 py-1 pb-6">
-                    {/* Zone Couleur de fond */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Palette className="w-3.5 h-3.5 text-[#3B82F6]" />
@@ -272,7 +271,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                       </div>
                     </div>
 
-                    {/* Zone Image Unsplash */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <ImageIcon className="w-3.5 h-3.5 text-[#3B82F6]" />
@@ -323,9 +321,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 : "bg-gray-200 dark:bg-white/10 text-gray-400 cursor-not-allowed"
             )}
           >
-            {formData.name.trim() 
-              ? (initialData?.id ? 'Enregistrer les modifications' : 'Créer la liste') 
-              : 'Nom requis (onglet Général)'}
+            {initialData?.id ? 'Enregistrer les modifications' : 'Créer la liste'}
           </Button>
         </div>
       </DialogContent>
