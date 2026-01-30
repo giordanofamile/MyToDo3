@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Paperclip, X, FileText, Image as ImageIcon, Loader2, Download, Trash2 } from 'lucide-react';
+import { Paperclip, FileText, Loader2, Download, Trash2, UploadCloud } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import imageCompression from 'browser-image-compression';
 import { cn } from '@/lib/utils';
@@ -14,6 +13,7 @@ interface AttachmentManagerProps {
 const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
   const [attachments, setAttachments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     fetchAttachments();
@@ -30,10 +30,7 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
     else setAttachments(data || []);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processAndUploadFile = async (file: File) => {
     setUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +38,7 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
 
       let fileToUpload = file;
 
-      // Compression si c'est une image
+      // 1. Compression si c'est une image
       if (file.type.startsWith('image/')) {
         const options = {
           maxSizeMB: 0.5, // 500 KB
@@ -54,17 +51,22 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${user.id}/${taskId}/${fileName}`;
 
-      // Upload vers Supabase Storage (assurez-vous que le bucket 'attachments' existe)
+      // 2. Upload vers Supabase Storage (Bucket 'attachments')
       const { error: uploadError } = await supabase.storage
         .from('attachments')
         .upload(filePath, fileToUpload);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        if (uploadError.message.includes("bucket not found")) {
+          throw new Error("Le bucket 'attachments' n'existe pas dans Supabase. Veuillez le créer dans l'onglet Storage.");
+        }
+        throw uploadError;
+      }
 
-      // Enregistrement en base
+      // 3. Enregistrement des métadonnées en base
       const { error: dbError } = await supabase
         .from('attachments')
         .insert([{
@@ -78,7 +80,7 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
 
       if (dbError) throw dbError;
 
-      showSuccess("Fichier ajouté");
+      showSuccess(`Fichier "${file.name}" ajouté avec succès`);
       fetchAttachments();
     } catch (error: any) {
       showError(error.message);
@@ -86,6 +88,32 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
       setUploading(false);
     }
   };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processAndUploadFile(file);
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) processAndUploadFile(file);
+  }, []);
 
   const deleteAttachment = async (attachment: any) => {
     try {
@@ -118,30 +146,53 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Pièces jointes (Max 500 Ko)</Label>
-        <div className="relative">
-          <input 
-            type="file" 
-            id="file-upload" 
-            className="hidden" 
-            onChange={handleFileUpload}
-            disabled={uploading}
-          />
-          <label 
-            htmlFor="file-upload"
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-500 rounded-xl text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-blue-500/20 transition-all",
-              uploading && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Paperclip className="w-3 h-3" />}
-            Ajouter
-          </label>
+      </div>
+
+      {/* Zone de Drop / Upload */}
+      <div 
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cn(
+          "relative border-2 border-dashed rounded-[2rem] p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
+          isDragging 
+            ? "border-blue-500 bg-blue-500/5 scale-[0.98]" 
+            : "border-gray-100 dark:border-white/5 hover:border-blue-500/30 hover:bg-gray-50 dark:hover:bg-white/5"
+        )}
+      >
+        <input 
+          type="file" 
+          id="file-upload" 
+          className="absolute inset-0 opacity-0 cursor-pointer" 
+          onChange={handleFileSelect}
+          disabled={uploading}
+        />
+        
+        <div className={cn(
+          "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
+          isDragging ? "bg-blue-500 text-white" : "bg-blue-500/10 text-blue-500 group-hover:scale-110"
+        )}>
+          {uploading ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <UploadCloud className="w-6 h-6" />
+          )}
+        </div>
+        
+        <div className="text-center">
+          <p className="text-sm font-bold dark:text-white">
+            {uploading ? "Téléchargement..." : "Glissez un fichier ici"}
+          </p>
+          <p className="text-[10px] text-gray-400 font-medium mt-1">
+            Ou cliquez pour parcourir vos dossiers
+          </p>
         </div>
       </div>
 
+      {/* Liste des fichiers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {attachments.map((att) => (
-          <div key={att.id} className="flex items-center gap-3 p-3 bg-white dark:bg-white/5 rounded-2xl group border-none shadow-sm">
+          <div key={att.id} className="flex items-center gap-3 p-3 bg-white dark:bg-white/5 rounded-2xl group border border-gray-50 dark:border-white/5 shadow-sm hover:shadow-md transition-all">
             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
               {att.file_type.startsWith('image/') ? (
                 <img src={getPublicUrl(att.file_path)} alt={att.name} className="w-full h-full object-cover" />
@@ -172,11 +223,6 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
             </div>
           </div>
         ))}
-        {attachments.length === 0 && !uploading && (
-          <div className="col-span-full py-8 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[2rem]">
-            <p className="text-xs text-gray-400 font-medium">Aucune pièce jointe</p>
-          </div>
-        )}
       </div>
     </div>
   );
