@@ -17,7 +17,8 @@ import {
   Clock,
   Archive,
   Image as ImageIcon,
-  Activity
+  Activity,
+  AlignLeft
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -221,92 +222,106 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 className="w-full"
               >
                 {activeTab === 'general' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-5">
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Statut</Label>
-                        <Select value={task.status || 'En attente'} onValueChange={(val) => onUpdate(task.id, { status: val })}>
-                          <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
-                            <div className="flex items-center gap-2">
-                              <Activity className="w-4 h-4 text-blue-500" />
-                              <SelectValue placeholder="Statut" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-none shadow-2xl">
-                            {STATUS_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                <div className="flex items-center gap-2">
-                                  <div className={cn("w-2 h-2 rounded-full", opt.color)} />
-                                  {opt.value}
-                                </div>
-                              </SelectItem>
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-5">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Statut</Label>
+                          <Select value={task.status || 'En attente'} onValueChange={(val) => onUpdate(task.id, { status: val })}>
+                            <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                              <div className="flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-blue-500" />
+                                <SelectValue placeholder="Statut" />
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                              {STATUS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  <div className="flex items-center gap-2">
+                                    <div className={cn("w-2 h-2 rounded-full", opt.color)} />
+                                    {opt.value}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Priorité</Label>
+                          <div className="flex gap-1">
+                            {['low', 'medium', 'high'].map((p) => (
+                              <button
+                                key={p}
+                                onClick={() => onUpdate(task.id, { priority: p })}
+                                className={cn(
+                                  "flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                  task.priority === p 
+                                    ? p === 'high' ? "bg-red-500 text-white" 
+                                      : p === 'medium' ? "bg-orange-500 text-white"
+                                      : "bg-blue-500 text-white"
+                                    : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                )}
+                              >
+                                {p === 'low' ? 'Basse' : p === 'medium' ? 'Moyenne' : 'Haute'}
+                              </button>
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Priorité</Label>
-                        <div className="flex gap-1">
-                          {['low', 'medium', 'high'].map((p) => (
-                            <button
-                              key={p}
-                              onClick={() => onUpdate(task.id, { priority: p })}
-                              className={cn(
-                                "flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                                task.priority === p 
-                                  ? p === 'high' ? "bg-red-500 text-white" 
-                                    : p === 'medium' ? "bg-orange-500 text-white"
-                                    : "bg-blue-500 text-white"
-                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                              )}
-                            >
-                              {p === 'low' ? 'Basse' : p === 'medium' ? 'Moyenne' : 'Haute'}
-                            </button>
-                          ))}
+                      <div className="space-y-5">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
+                          <Select value={task.estimated_minutes?.toString() || '0'} onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}>
+                            <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-orange-500" />
+                                <SelectValue placeholder="0 min" />
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                              <SelectItem value="0">Aucune</SelectItem>
+                              <SelectItem value="5">5 min</SelectItem>
+                              <SelectItem value="15">15 min</SelectItem>
+                              <SelectItem value="30">30 min</SelectItem>
+                              <SelectItem value="60">1 heure</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" className="w-full h-10 rounded-none bg-transparent border-none shadow-none justify-start text-sm font-bold p-0 hover:bg-transparent">
+                                <CalendarIcon className="mr-2 h-4 w-4 text-teal-500" />
+                                {task.due_date ? format(new Date(task.due_date), 'd MMM yyyy', { locale: fr }) : "Ajouter une date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 rounded-xl shadow-2xl border-none" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={task.due_date ? new Date(task.due_date) : undefined}
+                                onSelect={(date) => onUpdate(task.id, { due_date: date })}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-5">
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
-                        <Select value={task.estimated_minutes?.toString() || '0'} onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}>
-                          <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-orange-500" />
-                              <SelectValue placeholder="0 min" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-none shadow-2xl">
-                            <SelectItem value="0">Aucune</SelectItem>
-                            <SelectItem value="5">5 min</SelectItem>
-                            <SelectItem value="15">15 min</SelectItem>
-                            <SelectItem value="30">30 min</SelectItem>
-                            <SelectItem value="60">1 heure</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" className="w-full h-10 rounded-none bg-transparent border-none shadow-none justify-start text-sm font-bold p-0 hover:bg-transparent">
-                              <CalendarIcon className="mr-2 h-4 w-4 text-teal-500" />
-                              {task.due_date ? format(new Date(task.due_date), 'd MMM yyyy', { locale: fr }) : "Ajouter une date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-xl shadow-2xl border-none" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={task.due_date ? new Date(task.due_date) : undefined}
-                              onSelect={(date) => onUpdate(task.id, { due_date: date })}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                    <div className="space-y-3">
+                      <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <AlignLeft className="w-3 h-3" /> Description
+                      </Label>
+                      <Textarea
+                        placeholder="Ajouter une description détaillée..."
+                        className="min-h-[100px] rounded-2xl bg-gray-50 dark:bg-white/5 border-none shadow-none focus-visible:ring-1 focus-visible:ring-blue-500/50 resize-none p-4 text-sm leading-relaxed outline-none"
+                        value={task.description || ''}
+                        onChange={(e) => onUpdate(task.id, { description: e.target.value })}
+                      />
                     </div>
                   </div>
                 )}

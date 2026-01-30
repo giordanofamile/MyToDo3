@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo, RefreshCw, Clock, AlertCircle, Paperclip, Image as ImageIcon } from 'lucide-react';
+import { 
+  Circle, 
+  CheckCircle2, 
+  Star, 
+  Calendar, 
+  Paperclip, 
+  MessageSquare,
+  AlignLeft,
+  Clock
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, isPast, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/lib/supabase';
-import TagBadge from './TagBadge';
-import { Progress } from '@/components/ui/progress';
 
 interface TaskItemProps {
   task: any;
@@ -16,48 +22,8 @@ interface TaskItemProps {
   onClick: (task: any) => void;
 }
 
-const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: TaskItemProps) => {
-  const [subtaskStats, setSubtaskStats] = useState({ total: 0, completed: 0 });
-  const [attachmentCount, setAttachmentCount] = useState(0);
-  const isOverdue = task.due_date && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date)) && !task.is_completed;
-
-  useEffect(() => {
-    fetchStats();
-  }, [task.id]);
-
-  const fetchStats = async () => {
-    // Fetch subtasks
-    const { data: subtasks } = await supabase
-      .from('subtasks')
-      .select('is_completed')
-      .eq('task_id', task.id);
-    
-    if (subtasks) {
-      setSubtaskStats({
-        total: subtasks.length,
-        completed: subtasks.filter(s => s.is_completed).length
-      });
-    }
-
-    // Fetch attachments count
-    const { count } = await supabase
-      .from('attachments')
-      .select('*', { count: 'exact', head: true })
-      .eq('task_id', task.id);
-    
-    setAttachmentCount(count || 0);
-  };
-
-  const progress = subtaskStats.total > 0 ? (subtaskStats.completed / subtaskStats.total) * 100 : 0;
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-500 bg-red-50 dark:bg-red-500/10';
-      case 'medium': return 'text-orange-500 bg-orange-50 dark:bg-orange-500/10';
-      case 'low': return 'text-blue-500 bg-blue-50 dark:bg-blue-500/10';
-      default: return 'text-gray-400 bg-gray-50 dark:bg-white/5';
-    }
-  };
+const TaskItem = ({ task, onToggle, onToggleImportant, onClick }: TaskItemProps) => {
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.is_completed;
 
   return (
     <motion.div
@@ -65,69 +31,74 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group flex items-center gap-4 bg-white/70 dark:bg-white/5 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 hover:shadow-md hover:bg-white dark:hover:bg-white/10 transition-all duration-300 cursor-pointer"
+      className={cn(
+        "group flex items-center gap-4 p-4 rounded-[2rem] transition-all cursor-pointer",
+        "bg-white dark:bg-[#2C2C2E] border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-xl hover:scale-[1.01]",
+        task.is_completed && "opacity-60 grayscale-[0.5]"
+      )}
       onClick={() => onClick(task)}
     >
-      <button 
-        onClick={(e) => { e.stopPropagation(); onToggle(task); }}
-        className="text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-colors"
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle(task);
+        }}
+        className="flex-none transition-transform active:scale-90"
       >
         {task.is_completed ? (
-          <CheckCircle2 className="w-6 h-6 text-blue-500 fill-blue-50 dark:fill-blue-500/10" />
+          <CheckCircle2 className="w-6 h-6 text-blue-500" />
         ) : (
-          <Circle className="w-6 h-6" />
+          <Circle className="w-6 h-6 text-gray-300 group-hover:text-blue-400" />
         )}
       </button>
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <p className={cn(
-            "text-[15px] font-medium transition-all duration-300 truncate",
-            task.is_completed ? "text-gray-400 dark:text-gray-600 line-through" : "text-gray-900 dark:text-white"
+          <h3 className={cn(
+            "text-sm font-bold truncate dark:text-white",
+            task.is_completed && "line-through text-gray-400"
           )}>
             {task.title}
-          </p>
-          <div className="flex gap-1 items-center">
-            {task.header_image && (
-              <ImageIcon className="w-3 h-3 text-gray-400" />
-            )}
-            {attachmentCount > 0 && (
-              <div className="flex items-center gap-0.5 text-[10px] text-gray-400 font-bold">
-                <Paperclip className="w-3 h-3" />
-                {attachmentCount}
-              </div>
-            )}
-            {task.priority && task.priority !== 'medium' && (
-              <span className={cn("px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter", getPriorityColor(task.priority))}>
-                {task.priority === 'high' ? 'Urgent' : 'Basse'}
-              </span>
-            )}
-          </div>
+          </h3>
+          {task.priority === 'high' && (
+            <span className="flex-none w-1.5 h-1.5 rounded-full bg-red-500" />
+          )}
         </div>
         
-        <div className="flex items-center gap-3 mt-1">
-          {subtaskStats.total > 0 && (
-            <div className="flex items-center gap-2 flex-1 max-w-[100px]">
-              <Progress value={progress} className="h-1 bg-gray-100 dark:bg-white/5" />
-              <span className="text-[9px] font-bold text-gray-400">{subtaskStats.completed}/{subtaskStats.total}</span>
+        <div className="flex items-center gap-3">
+          {task.description && (
+            <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 truncate max-w-[200px]">
+              <AlignLeft className="w-3 h-3" />
+              <span className="truncate">{task.description}</span>
             </div>
           )}
-
-          <div className="flex items-center gap-3">
+          
+          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest">
+            {task.due_date && (
+              <div className={cn(
+                "flex items-center gap-1",
+                isOverdue ? "text-red-500" : "text-gray-400"
+              )}>
+                <Calendar className="w-3 h-3" />
+                {format(new Date(task.due_date), 'd MMM', { locale: fr })}
+              </div>
+            )}
+            
             {task.estimated_minutes > 0 && (
-              <div className="flex items-center gap-1 text-[10px] text-orange-500 font-bold">
+              <div className="flex items-center gap-1 text-orange-500">
                 <Clock className="w-3 h-3" />
                 {task.estimated_minutes}m
               </div>
             )}
 
-            {task.due_date && (
+            {task.status && (
               <div className={cn(
-                "flex items-center gap-1 text-[10px] font-bold",
-                isOverdue ? "text-red-500" : "text-blue-500 dark:text-blue-400"
+                "px-2 py-0.5 rounded-full text-[8px] font-black",
+                task.status === 'En cours' ? "bg-blue-500/10 text-blue-500" :
+                task.status === 'Terminé' ? "bg-green-500/10 text-green-500" :
+                "bg-gray-500/10 text-gray-500"
               )}>
-                <Calendar className="w-3 h-3" />
-                {format(new Date(task.due_date), 'eee d MMM', { locale: fr })}
+                {task.status}
               </div>
             )}
           </div>
@@ -135,19 +106,17 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
       </div>
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button 
-          onClick={(e) => { e.stopPropagation(); onToggleImportant(task); }}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors"
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleImportant(task);
+          }}
+          className={cn(
+            "p-2 rounded-xl transition-colors",
+            task.is_important ? "text-pink-500" : "text-gray-300 hover:text-pink-400"
+          )}
         >
-          <Star className={cn("w-4 h-4 transition-all", 
-            task.is_important ? "fill-pink-500 text-pink-500 scale-110" : "text-gray-300 dark:text-gray-600 hover:text-pink-400"
-          )} />
-        </button>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-          className="p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-gray-300 dark:text-gray-600 hover:text-red-500 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
+          <Star className={cn("w-4 h-4", task.is_important && "fill-current")} />
         </button>
       </div>
     </motion.div>
