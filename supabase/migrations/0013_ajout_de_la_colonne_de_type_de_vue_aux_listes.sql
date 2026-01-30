@@ -1,0 +1,1 @@
+ALTER TABLE public.lists ADD COLUMN IF NOT EXISTS preferred_view TEXT DEFAULT 'list';
