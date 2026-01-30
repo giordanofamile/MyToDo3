@@ -97,7 +97,16 @@ const Index = () => {
     const { error } = await supabase.from('tasks').update(updates).eq('id', id);
     if (error) showError(error.message);
     else {
-      setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
+      const updatedTask = tasks.find(t => t.id === id);
+      const newTaskObj = { ...updatedTask, ...updates };
+      
+      setTasks(tasks.map(t => t.id === id ? newTaskObj : t));
+      
+      // CRITIQUE : Mettre à jour la tâche sélectionnée pour permettre la saisie
+      if (selectedTask?.id === id) {
+        setSelectedTask(newTaskObj);
+      }
+      
       if (updates.is_completed === true) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     }
   };
@@ -107,6 +116,7 @@ const Index = () => {
     if (error) showError(error.message);
     else {
       setTasks(tasks.filter(t => t.id !== id));
+      if (selectedTask?.id === id) setSelectedTask(null);
       showSuccess("Tâche supprimée");
     }
   };
