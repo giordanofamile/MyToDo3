@@ -5,10 +5,17 @@ import Sidebar from '@/components/Sidebar';
 import TaskItem from '@/components/TaskItem';
 import TaskDetails from '@/components/TaskDetails';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, LayoutGrid } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowUpDown, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Progress } from '@/components/ui/progress';
 
 const Index = () => {
   const [session, setSession] = useState<any>(null);
@@ -18,6 +25,7 @@ const Index = () => {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical'>('created');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,13 +47,9 @@ const Index = () => {
     setLoading(true);
     let query = supabase.from('tasks').select('*');
 
-    // Logique de filtrage
     if (activeList === 'important') {
       query = query.eq('is_important', true);
-    } else if (activeList === 'my-day') {
-      // On pourrait filtrer par date ici
-    } else if (activeList !== 'tasks' && activeList !== 'planned') {
-      // C'est une liste personnalisée (UUID)
+    } else if (activeList !== 'tasks' && activeList !== 'planned' && activeList !== 'my-day') {
       query = query.eq('list_id', activeList);
     }
 
@@ -99,10 +103,19 @@ const Index = () => {
     }
   };
 
-  // Filtrage par recherche
-  const filteredTasks = tasks.filter(task => 
+  // Logique de tri et filtrage
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (sortBy === 'importance') return (b.is_important ? 1 : 0) - (a.is_important ? 1 : 0);
+    if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  const filteredTasks = sortedTasks.filter(task => 
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const completedCount = tasks.filter(t => t.is_completed).length;
+  const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
 
   if (!session) return <Auth />;
 
@@ -117,27 +130,58 @@ const Index = () => {
       
       <main className="flex-1 flex flex-col bg-[#F5F5F7]/40 relative">
         <div className="max-w-4xl w-full mx-auto px-8 pt-16 pb-32 overflow-y-auto custom-scrollbar">
-          <header className="mb-12 flex items-end justify-between">
-            <div>
-              <motion.h1 
-                key={activeList}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-5xl font-extrabold tracking-tight text-gray-900"
+          <header className="mb-12">
+            <div className="flex items-end justify-between mb-6">
+              <div>
+                <motion.h1 
+                  key={activeList}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-5xl font-extrabold tracking-tight text-gray-900"
+                >
+                  {activeList === 'my-day' ? 'Ma journée' : 
+                   activeList === 'important' ? 'Important' : 
+                   activeList === 'tasks' ? 'Tâches' : 'Ma Liste'}
+                </motion.h1>
+                <p className="text-gray-500 mt-2 font-semibold text-lg">
+                  {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full bg-white/50 shadow-sm">
+                      <ArrowUpDown className="w-5 h-5 text-gray-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2">
+                    <DropdownMenuItem onClick={() => setSortBy('created')} className="rounded-xl">Plus récent</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('importance')} className="rounded-xl">Importance</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('alphabetical')} className="rounded-xl">Alphabétique</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="ghost" size="icon" className="rounded-full bg-white/50 shadow-sm">
+                  <LayoutGrid className="w-5 h-5 text-gray-500" />
+                </Button>
+              </div>
+            </div>
+
+            {tasks.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white/60 backdrop-blur-xl p-4 rounded-3xl border border-white/50 shadow-sm mb-8"
               >
-                {activeList === 'my-day' ? 'Ma journée' : 
-                 activeList === 'important' ? 'Important' : 
-                 activeList === 'tasks' ? 'Tâches' : 'Ma Liste'}
-              </motion.h1>
-              <p className="text-gray-500 mt-2 font-semibold text-lg">
-                {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="rounded-full bg-white/50 shadow-sm">
-                <LayoutGrid className="w-5 h-5 text-gray-500" />
-              </Button>
-            </div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm font-bold text-gray-700">{completedCount} sur {tasks.length} terminées</span>
+                  </div>
+                  <span className="text-sm font-bold text-blue-600">{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-2 bg-gray-200/50" />
+              </motion.div>
+            )}
           </header>
 
           <div className="space-y-3">
