@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sun, Star, Calendar, Hash, Plus, LogOut, Search, Moon, Trash2, 
   Settings2, BarChart3, Archive, AlertCircle, CalendarDays, ChevronRight, ChevronDown,
-  GripVertical, FolderInput
+  GripVertical, FolderInput, FolderPlus
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,6 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Éviter les problèmes d'hydratation pour le thème
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
@@ -73,7 +72,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   };
 
   const handleSaveList = async (listData: any) => {
-    if (editingList) {
+    if (editingList?.id) {
       const { data, error } = await supabase.from('lists').update(listData).eq('id', editingList.id).select();
       if (error) showError(error.message);
       else {
@@ -143,7 +142,26 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                     </span>
                   )}
                   <div className="hidden group-hover:flex items-center gap-1">
-                    <Settings2 className="w-3.5 h-3.5 text-gray-300 hover:text-blue-500" onClick={(e) => { e.stopPropagation(); setEditingList(list); setIsListDialogOpen(true); }} />
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setEditingList({ parent_id: list.id }); 
+                        setIsListDialogOpen(true); 
+                      }}
+                      className="p-1 hover:bg-blue-500/10 rounded-md transition-colors"
+                    >
+                      <FolderPlus className="w-3.5 h-3.5 text-blue-500" />
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setEditingList(list); 
+                        setIsListDialogOpen(true); 
+                      }}
+                      className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors"
+                    >
+                      <Settings2 className="w-3.5 h-3.5 text-gray-300 hover:text-blue-500" />
+                    </button>
                   </div>
                 </div>
               </button>
