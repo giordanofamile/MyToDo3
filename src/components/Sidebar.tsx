@@ -28,6 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import ListDialog from './ListDialog';
 import ProfileDialog from './ProfileDialog';
+import { Badge } from '@/components/ui/badge';
 
 const ICON_MAP: Record<string, any> = {
   Hash, Briefcase, ShoppingCart, Heart, Star, Music, Book, Plane
@@ -42,6 +43,7 @@ interface SidebarProps {
 
 const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: SidebarProps) => {
   const [customLists, setCustomLists] = useState<any[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isListDialogOpen, setIsListDialogOpen] = useState(false);
@@ -52,6 +54,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   useEffect(() => {
     fetchUser();
     fetchLists();
+    fetchCounts();
   }, []);
 
   const fetchUser = async () => {
@@ -77,6 +80,31 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     
     if (error) showError(error.message);
     else setCustomLists(data || []);
+  };
+
+  const fetchCounts = async () => {
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('id, list_id, is_important, due_date, is_completed, is_archived')
+      .eq('is_completed', false)
+      .eq('is_archived', false);
+
+    if (!tasks) return;
+
+    const newCounts: Record<string, number> = {
+      'my-day': tasks.filter(t => !t.list_id).length,
+      'important': tasks.filter(t => t.is_important).length,
+      'planned': tasks.filter(t => t.due_date).length,
+      'tasks': tasks.length,
+    };
+
+    tasks.forEach(t => {
+      if (t.list_id) {
+        newCounts[t.list_id] = (newCounts[t.list_id] || 0) + 1;
+      }
+    });
+
+    setCounts(newCounts);
   };
 
   const handleSaveList = async (listData: { name: string, icon: string, color: string }) => {
@@ -173,14 +201,21 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
               key={item.id}
               onClick={() => setActiveList(item.id)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group",
                 activeList === item.id 
                   ? "bg-white dark:bg-white/10 shadow-md dark:shadow-none text-black dark:text-white" 
                   : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
               )}
             >
-              <item.icon className={cn("w-5 h-5", item.color)} />
-              <span className="text-sm font-semibold">{item.label}</span>
+              <div className="flex items-center gap-3">
+                <item.icon className={cn("w-5 h-5", item.color)} />
+                <span className="text-sm font-semibold">{item.label}</span>
+              </div>
+              {counts[item.id] > 0 && (
+                <span className="text-[10px] font-bold bg-gray-200/50 dark:bg-white/10 px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400">
+                  {counts[item.id]}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -213,15 +248,22 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                     <Icon className={cn("w-5 h-5", list.color || "text-gray-400")} />
                     <span className="text-sm font-semibold truncate">{list.name}</span>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <Settings2 
-                      className="w-4 h-4 text-gray-300 hover:text-blue-500 cursor-pointer" 
-                      onClick={(e) => { e.stopPropagation(); setEditingList(list); setIsListDialogOpen(true); }}
-                    />
-                    <Trash2 
-                      className="w-4 h-4 text-gray-300 hover:text-red-500 cursor-pointer" 
-                      onClick={(e) => deleteList(e, list.id)}
-                    />
+                  <div className="flex items-center gap-2">
+                    {counts[list.id] > 0 && (
+                      <span className="text-[10px] font-bold bg-gray-200/50 dark:bg-white/10 px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400 group-hover:hidden">
+                        {counts[list.id]}
+                      </span>
+                    )}
+                    <div className="hidden group-hover:flex items-center gap-1">
+                      <Settings2 
+                        className="w-4 h-4 text-gray-300 hover:text-blue-500 cursor-pointer" 
+                        onClick={(e) => { e.stopPropagation(); setEditingList(list); setIsListDialogOpen(true); }}
+                      />
+                      <Trash2 
+                        className="w-4 h-4 text-gray-300 hover:text-red-500 cursor-pointer" 
+                        onClick={(e) => deleteList(e, list.id)}
+                      />
+                    </div>
                   </div>
                 </button>
               );

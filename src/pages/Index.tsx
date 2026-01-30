@@ -27,7 +27,9 @@ import {
   GripVertical,
   Menu,
   LayoutList,
-  CalendarDays
+  CalendarDays,
+  FolderInput,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +38,9 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -119,7 +123,6 @@ const Index = () => {
     setLoading(true);
     let query = supabase.from('tasks').select('*');
 
-    // Filtrage par archive
     if (activeList === 'archive') {
       query = query.eq('is_archived', true);
     } else {
@@ -255,23 +258,28 @@ const Index = () => {
     }
   };
 
-  const handleBatchAction = async (action: 'complete' | 'delete') => {
+  const handleBatchAction = async (action: 'complete' | 'delete' | 'move' | 'priority', value?: any) => {
     if (selectedIds.length === 0) return;
 
     if (action === 'delete' && !confirm(`Supprimer les ${selectedIds.length} tâches sélectionnées ?`)) return;
 
-    const { error } = action === 'complete' 
-      ? await supabase.from('tasks').update({ is_completed: true }).in('id', selectedIds)
-      : await supabase.from('tasks').delete().in('id', selectedIds);
+    let updates: any = {};
+    if (action === 'complete') updates = { is_completed: true };
+    if (action === 'move') updates = { list_id: value };
+    if (action === 'priority') updates = { priority: value };
+
+    const { error } = action === 'delete' 
+      ? await supabase.from('tasks').delete().in('id', selectedIds)
+      : await supabase.from('tasks').update(updates).in('id', selectedIds);
 
     if (error) showError(error.message);
     else {
-      if (action === 'complete') {
-        setTasks(tasks.map(t => selectedIds.includes(t.id) ? { ...t, is_completed: true } : t));
-        showSuccess(`${selectedIds.length} tâches terminées`);
-      } else {
+      if (action === 'delete') {
         setTasks(tasks.filter(t => !selectedIds.includes(t.id)));
         showSuccess(`${selectedIds.length} tâches supprimées`);
+      } else {
+        setTasks(tasks.map(t => selectedIds.includes(t.id) ? { ...t, ...updates } : t));
+        showSuccess(`${selectedIds.length} tâches mises à jour`);
       }
       setSelectionMode(false);
       setSelectedIds([]);
@@ -601,16 +609,47 @@ const Index = () => {
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="absolute bottom-32 left-0 right-0 px-4 sm:px-8 z-40"
+              className="fixed bottom-32 left-0 right-0 px-4 sm:px-8 z-40"
             >
-              <div className="max-w-md mx-auto bg-indigo-600 text-white p-4 rounded-[2rem] shadow-2xl flex items-center justify-between">
+              <div className="max-w-2xl mx-auto bg-indigo-600 text-white p-4 rounded-[2rem] shadow-2xl flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 ml-2">
-                  <span className="font-bold">{selectedIds.length} sélectionnés</span>
+                  <span className="font-bold whitespace-nowrap">{selectedIds.length} sélectionnés</span>
                   <button onClick={() => { setSelectionMode(false); setSelectedIds([]); }} className="p-1 hover:bg-white/10 rounded-full">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="hover:bg-white/10 text-white rounded-xl gap-2">
+                        <FolderInput className="w-4 h-4" /> Déplacer
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2">
+                      <DropdownMenuLabel>Vers la liste...</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => handleBatchAction('move', null)}>Ma journée</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {customLists.map(list => (
+                        <DropdownMenuItem key={list.id} onClick={() => handleBatchAction('move', list.id)}>
+                          {list.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="hover:bg-white/10 text-white rounded-xl gap-2">
+                        <AlertTriangle className="w-4 h-4" /> Priorité
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="rounded-2xl border-none shadow-2xl p-2">
+                      <DropdownMenuItem onClick={() => handleBatchAction('priority', 'high')} className="text-red-500">Haute</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBatchAction('priority', 'medium')} className="text-orange-500">Moyenne</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBatchAction('priority', 'low')} className="text-blue-500">Basse</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   <Button 
                     variant="ghost" 
                     className="hover:bg-white/10 text-white rounded-xl"
