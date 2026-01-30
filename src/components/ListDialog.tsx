@@ -239,59 +239,57 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 </div>
               </TabsContent>
 
-              <TabsContent value="background" className="mt-0 h-full flex flex-col">
-                <div className="space-y-6 pb-4">
-                  {/* Zone Couleur de fond - Placée en haut */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Palette className="w-3.5 h-3.5 text-[#3B82F6]" />
-                      <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">COULEUR DE FOND</Label>
-                    </div>
-                    <div className="grid grid-cols-5 gap-2">
-                      {COLORS.map((color) => (
+              <TabsContent value="background" className="mt-0 h-full">
+                <ScrollArea className="h-full pr-4 custom-scrollbar">
+                  <div className="space-y-8 pb-6">
+                    {/* Zone Couleur de fond - Maintenant dans le scroll */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Palette className="w-3.5 h-3.5 text-[#3B82F6]" />
+                        <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">COULEUR DE FOND</Label>
+                      </div>
+                      <div className="grid grid-cols-5 gap-2">
+                        {COLORS.map((color) => (
+                          <button
+                            key={color.bg}
+                            onClick={() => setFormData({ ...formData, bg_color: color.bg, bg_image: '' })}
+                            className={cn(
+                              "h-10 rounded-xl transition-all border-2",
+                              color.bg,
+                              formData.bg_color === color.bg ? "border-[#3B82F6] scale-95 shadow-md" : "border-transparent hover:opacity-80"
+                            )}
+                          />
+                        ))}
                         <button
-                          key={color.bg}
-                          onClick={() => setFormData({ ...formData, bg_color: color.bg, bg_image: '' })}
+                          onClick={() => setFormData({ ...formData, bg_color: '', bg_image: '' })}
                           className={cn(
-                            "h-10 rounded-xl transition-all border-2",
-                            color.bg,
-                            formData.bg_color === color.bg ? "border-[#3B82F6] scale-95 shadow-md" : "border-transparent hover:opacity-80"
+                            "h-10 rounded-xl transition-all border-2 border-dashed border-[#E2E8F0] dark:border-white/10 flex items-center justify-center",
+                            !formData.bg_color && !formData.bg_image ? "bg-white dark:bg-white/5 border-[#3B82F6]" : "hover:bg-white/50"
                           )}
-                        />
-                      ))}
-                      <button
-                        onClick={() => setFormData({ ...formData, bg_color: '', bg_image: '' })}
-                        className={cn(
-                          "h-10 rounded-xl transition-all border-2 border-dashed border-[#E2E8F0] dark:border-white/10 flex items-center justify-center",
-                          !formData.bg_color && !formData.bg_image ? "bg-white dark:bg-white/5 border-[#3B82F6]" : "hover:bg-white/50"
-                        )}
-                      >
-                        <X className="w-4 h-4 text-[#94A3B8]" />
-                      </button>
+                        >
+                          <X className="w-4 h-4 text-[#94A3B8]" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Zone Image Unsplash */}
-                  <div className="space-y-3 flex-1 flex flex-col min-h-0">
-                    <div className="flex items-center justify-between">
+                    {/* Zone Image Unsplash - Également dans le scroll */}
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <ImageIcon className="w-3.5 h-3.5 text-[#3B82F6]" />
                         <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">IMAGE UNSPLASH</Label>
                       </div>
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                      {UNSPLASH_CATEGORIES.map(cat => (
-                        <button 
-                          key={cat} 
-                          onClick={() => fetchImages(cat)} 
-                          className="px-3 py-1.5 rounded-full bg-white dark:bg-white/5 text-[9px] font-bold whitespace-nowrap text-[#64748B] hover:text-[#3B82F6] transition-colors border border-[#E2E8F0] dark:border-white/5"
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                    <ScrollArea className="flex-1 pr-4 custom-scrollbar">
-                      <div className="grid grid-cols-3 gap-3 pb-4">
+                      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        {UNSPLASH_CATEGORIES.map(cat => (
+                          <button 
+                            key={cat} 
+                            onClick={() => fetchImages(cat)} 
+                            className="px-3 py-1.5 rounded-full bg-white dark:bg-white/5 text-[9px] font-bold whitespace-nowrap text-[#64748B] hover:text-[#3B82F6] transition-colors border border-[#E2E8F0] dark:border-white/5"
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
                         {images.map((img, i) => (
                           <button
                             key={i}
@@ -306,9 +304,9 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                           </button>
                         ))}
                       </div>
-                    </ScrollArea>
+                    </div>
                   </div>
-                </div>
+                </ScrollArea>
               </TabsContent>
             </div>
           </Tabs>
