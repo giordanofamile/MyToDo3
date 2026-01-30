@@ -47,7 +47,7 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
           variant={pivot === 'status' ? 'default' : 'ghost'} 
           size="sm" 
           onClick={() => setPivot('status')}
-          className="rounded-xl font-bold text-[10px] uppercase tracking-widest"
+          className="rounded-lg font-bold text-[10px] uppercase tracking-widest"
         >
           <Activity className="w-3 h-3 mr-2" /> Par Statut
         </Button>
@@ -55,7 +55,7 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
           variant={pivot === 'priority' ? 'default' : 'ghost'} 
           size="sm" 
           onClick={() => setPivot('priority')}
-          className="rounded-xl font-bold text-[10px] uppercase tracking-widest"
+          className="rounded-lg font-bold text-[10px] uppercase tracking-widest"
         >
           <Layout className="w-3 h-3 mr-2" /> Par Priorité
         </Button>
@@ -80,7 +80,7 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="flex-1 bg-gray-50/50 dark:bg-white/5 rounded-[2.5rem] p-4 space-y-4 min-h-[200px]"
+                    className="flex-1 bg-gray-50/50 dark:bg-white/5 rounded-xl p-4 space-y-4 min-h-[200px]"
                   >
                     {tasks.filter(t => (pivot === 'priority' ? t.priority : t.status) === col.id).map((task, index) => (
                       <Draggable key={task.id} draggableId={task.id} index={index}>
@@ -90,10 +90,10 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             onClick={() => onTaskClick(task)}
-                            className="bg-white dark:bg-[#2C2C2E] rounded-3xl p-4 shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-xl transition-all group cursor-pointer"
+                            className="bg-white dark:bg-[#2C2C2E] rounded-lg p-4 shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-xl transition-all group cursor-pointer"
                           >
                             {task.header_image && (
-                              <div className="h-24 w-full rounded-2xl overflow-hidden mb-3">
+                              <div className="h-24 w-full rounded-md overflow-hidden mb-3">
                                 <img src={task.header_image} alt="" className="w-full h-full object-cover" />
                               </div>
                             )}

@@ -23,7 +23,7 @@ const GridView = ({ tasks, onTaskClick, onToggleComplete }: GridViewProps) => {
           animate={{ opacity: 1, scale: 1 }}
           whileHover={{ y: -5 }}
           onClick={() => onTaskClick(task)}
-          className="bg-white dark:bg-[#1C1C1E] rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-2xl transition-all group cursor-pointer flex flex-col"
+          className="bg-white dark:bg-[#1C1C1E] rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-2xl transition-all group cursor-pointer flex flex-col"
         >
           {/* Header Image */}
           <div className="h-32 w-full relative overflow-hidden">

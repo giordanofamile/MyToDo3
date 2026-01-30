@@ -32,22 +32,22 @@ const CalendarView = ({ tasks, onTaskClick }: CalendarViewProps) => {
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/50 dark:border-white/10 shadow-xl h-full flex flex-col"
+      className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl p-8 rounded-xl border border-white/50 dark:border-white/10 shadow-xl h-full flex flex-col"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 flex-1 overflow-hidden">
         <div className="flex justify-center items-start pt-4">
           <Calendar
             mode="single"
             locale={fr}
-            className="rounded-2xl border-none p-0"
+            className="rounded-lg border-none p-0"
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
             classNames={{
-              day_today: "bg-blue-500/10 text-blue-600 font-bold rounded-xl",
-              day_selected: "bg-blue-500 text-white rounded-xl hover:bg-blue-600",
-              day: "h-12 w-12 p-0 font-medium aria-selected:opacity-100 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-all",
+              day_today: "bg-blue-500/10 text-blue-600 font-bold rounded-md",
+              day_selected: "bg-blue-500 text-white rounded-md hover:bg-blue-600",
+              day: "h-12 w-12 p-0 font-medium aria-selected:opacity-100 hover:bg-gray-100 dark:hover:bg-white/10 rounded-md transition-all",
               head_cell: "text-gray-400 font-bold uppercase text-[10px] tracking-widest pb-4",
-              nav_button: "hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl p-1 transition-all",
+              nav_button: "hover:bg-gray-100 dark:hover:bg-white/10 rounded-md p-1 transition-all",
             }}
           />
         </div>
@@ -67,7 +67,7 @@ const CalendarView = ({ tasks, onTaskClick }: CalendarViewProps) => {
                   <button
                     key={task.id}
                     onClick={() => onTaskClick(task)}
-                    className="w-full flex flex-col p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:shadow-md transition-all text-left group"
+                    className="w-full flex flex-col p-4 bg-white dark:bg-white/5 rounded-lg border border-gray-100 dark:border-white/10 hover:shadow-md transition-all text-left group"
                   >
                     <div className="flex items-center justify-between w-full mb-1">
                       <p className="font-bold text-sm dark:text-white truncate group-hover:text-blue-500 transition-colors">
