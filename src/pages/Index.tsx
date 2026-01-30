@@ -29,7 +29,9 @@ import {
   LayoutList,
   CalendarDays,
   FolderInput,
-  AlertTriangle
+  AlertTriangle,
+  Copy,
+  Eraser
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +47,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { addDays, addWeeks, addMonths, format } from 'date-fns';
+import { addDays, addWeeks, addMonths, format, isPast, isToday, endOfDay } from 'date-fns';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useIsMobile } from '@/hooks/use-mobile';
 import confetti from 'canvas-confetti';
@@ -132,6 +134,11 @@ const Index = () => {
         query = query.eq('is_important', true);
       } else if (activeList === 'planned') {
         query = query.not('due_date', 'is', null);
+      } else if (activeList === 'overdue') {
+        query = query.not('due_date', 'is', null).eq('is_completed', false);
+      } else if (activeList === 'next-7-days') {
+        const nextWeek = endOfDay(addDays(new Date(), 7)).toISOString();
+        query = query.not('due_date', 'is', null).lte('due_date', nextWeek);
       } else if (activeList === 'my-day') {
         query = query.is('list_id', null);
       } else if (activeList !== 'tasks') {
@@ -142,7 +149,13 @@ const Index = () => {
     const { data, error } = await query.order('position', { ascending: true });
 
     if (error) showError(error.message);
-    else setTasks(data || []);
+    else {
+      let finalData = data || [];
+      if (activeList === 'overdue') {
+        finalData = finalData.filter(t => isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)));
+      }
+      setTasks(finalData);
+    }
     setLoading(false);
   };
 
@@ -170,7 +183,7 @@ const Index = () => {
     e.preventDefault();
     if (!newTask.trim()) return;
 
-    const isCustomList = !['my-day', 'important', 'planned', 'tasks', 'archive'].includes(activeList);
+    const isCustomList = !['my-day', 'important', 'planned', 'tasks', 'archive', 'overdue', 'next-7-days'].includes(activeList);
 
     const { data, error } = await supabase
       .from('tasks')
@@ -180,7 +193,7 @@ const Index = () => {
         is_completed: false,
         is_important: activeList === 'important',
         list_id: isCustomList ? activeList : null,
-        due_date: activeList === 'planned' ? new Date().toISOString() : null,
+        due_date: activeList === 'planned' || activeList === 'next-7-days' ? new Date().toISOString() : null,
         position: tasks.length,
         tags: [],
         priority: 'medium',
@@ -193,6 +206,54 @@ const Index = () => {
       setTasks([...tasks, data[0]]);
       setNewTask('');
       showSuccess("Tâche ajoutée");
+    }
+  };
+
+  const duplicateTask = async (task: any) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([{
+        ...task,
+        id: undefined,
+        title: `${task.title} (Copie)`,
+        is_completed: false,
+        created_at: undefined,
+        updated_at: undefined,
+        position: tasks.length
+      }])
+      .select();
+
+    if (error) showError(error.message);
+    else {
+      // Dupliquer aussi les sous-tâches
+      const { data: subtasks } = await supabase.from('subtasks').select('*').eq('task_id', task.id);
+      if (subtasks && subtasks.length > 0) {
+        const newSubtasks = subtasks.map(s => ({
+          ...s,
+          id: undefined,
+          task_id: data[0].id,
+          is_completed: false,
+          created_at: undefined
+        }));
+        await supabase.from('subtasks').insert(newSubtasks);
+      }
+
+      setTasks([...tasks, data[0]]);
+      showSuccess("Tâche dupliquée");
+    }
+  };
+
+  const clearCompleted = async () => {
+    const completedIds = tasks.filter(t => t.is_completed).map(t => t.id);
+    if (completedIds.length === 0) return;
+
+    if (!confirm(`Supprimer les ${completedIds.length} tâches terminées ?`)) return;
+
+    const { error } = await supabase.from('tasks').delete().in('id', completedIds);
+    if (error) showError(error.message);
+    else {
+      setTasks(tasks.filter(t => !completedIds.includes(t.id)));
+      showSuccess("Tâches terminées supprimées");
     }
   };
 
@@ -319,6 +380,8 @@ const Index = () => {
       case 'my-day': return 'Ma journée';
       case 'important': return 'Important';
       case 'planned': return 'Planifié';
+      case 'overdue': return 'En retard';
+      case 'next-7-days': return '7 prochains jours';
       case 'tasks': return 'Tâches';
       case 'archive': return 'Archive';
       default: {
@@ -389,6 +452,17 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="flex gap-1 sm:gap-2">
+                  {completedCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={clearCompleted}
+                      className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm text-red-500 hover:text-red-600"
+                      title="Nettoyer les terminées"
+                    >
+                      <Eraser className="w-5 h-5" />
+                    </Button>
+                  )}
                   {activeList === 'planned' && (
                     <Button 
                       variant="ghost" 
@@ -572,6 +646,15 @@ const Index = () => {
                                   onClick={setSelectedTask}
                                 />
                               </div>
+                              {!selectionMode && (
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); duplicateTask(task); }}
+                                  className="p-2 text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-all hidden sm:block"
+                                  title="Dupliquer"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                           )}
                         </Draggable>

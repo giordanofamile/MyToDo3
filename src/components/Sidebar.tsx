@@ -19,7 +19,9 @@ import {
   Settings2,
   BarChart3,
   User as UserIcon,
-  Archive
+  Archive,
+  AlertCircle,
+  CalendarDays
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -28,7 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import ListDialog from './ListDialog';
 import ProfileDialog from './ProfileDialog';
-import { Badge } from '@/components/ui/badge';
+import { isPast, isToday, addDays, startOfDay, endOfDay } from 'date-fns';
 
 const ICON_MAP: Record<string, any> = {
   Hash, Briefcase, ShoppingCart, Heart, Star, Music, Book, Plane
@@ -91,11 +93,16 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
 
     if (!tasks) return;
 
+    const today = startOfDay(new Date());
+    const nextWeek = endOfDay(addDays(new Date(), 7));
+
     const newCounts: Record<string, number> = {
       'my-day': tasks.filter(t => !t.list_id).length,
       'important': tasks.filter(t => t.is_important).length,
       'planned': tasks.filter(t => t.due_date).length,
       'tasks': tasks.length,
+      'overdue': tasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date))).length,
+      'next-7-days': tasks.filter(t => t.due_date && new Date(t.due_date) <= nextWeek).length,
     };
 
     tasks.forEach(t => {
@@ -158,6 +165,8 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     { id: 'my-day', label: 'Ma journée', icon: Sun, color: 'text-blue-500' },
     { id: 'important', label: 'Important', icon: Star, color: 'text-pink-500' },
     { id: 'planned', label: 'Planifié', icon: Calendar, color: 'text-teal-500' },
+    { id: 'overdue', label: 'En retard', icon: AlertCircle, color: 'text-red-500' },
+    { id: 'next-7-days', label: '7 prochains jours', icon: CalendarDays, color: 'text-orange-500' },
     { id: 'tasks', label: 'Tâches', icon: Hash, color: 'text-blue-600' },
     { id: 'archive', label: 'Archive', icon: Archive, color: 'text-gray-500' },
   ];
