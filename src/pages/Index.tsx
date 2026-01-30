@@ -119,14 +119,21 @@ const Index = () => {
     setLoading(true);
     let query = supabase.from('tasks').select('*');
 
-    if (activeList === 'important') {
-      query = query.eq('is_important', true);
-    } else if (activeList === 'planned') {
-      query = query.not('due_date', 'is', null);
-    } else if (activeList === 'my-day') {
-      query = query.is('list_id', null);
-    } else if (activeList !== 'tasks') {
-      query = query.eq('list_id', activeList);
+    // Filtrage par archive
+    if (activeList === 'archive') {
+      query = query.eq('is_archived', true);
+    } else {
+      query = query.eq('is_archived', false);
+      
+      if (activeList === 'important') {
+        query = query.eq('is_important', true);
+      } else if (activeList === 'planned') {
+        query = query.not('due_date', 'is', null);
+      } else if (activeList === 'my-day') {
+        query = query.is('list_id', null);
+      } else if (activeList !== 'tasks') {
+        query = query.eq('list_id', activeList);
+      }
     }
 
     const { data, error } = await query.order('position', { ascending: true });
@@ -160,7 +167,7 @@ const Index = () => {
     e.preventDefault();
     if (!newTask.trim()) return;
 
-    const isCustomList = !['my-day', 'important', 'planned', 'tasks'].includes(activeList);
+    const isCustomList = !['my-day', 'important', 'planned', 'tasks', 'archive'].includes(activeList);
 
     const { data, error } = await supabase
       .from('tasks')
@@ -172,7 +179,9 @@ const Index = () => {
         list_id: isCustomList ? activeList : null,
         due_date: activeList === 'planned' ? new Date().toISOString() : null,
         position: tasks.length,
-        tags: []
+        tags: [],
+        priority: 'medium',
+        is_archived: false
       }])
       .select();
 
@@ -283,8 +292,10 @@ const Index = () => {
   });
 
   const filteredTasks = sortedTasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         task.tags?.some((t: string) => `#${t.toLowerCase()}`.includes(searchQuery.toLowerCase()));
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = task.title.toLowerCase().includes(searchLower) || 
+                         (task.notes && task.notes.toLowerCase().includes(searchLower)) ||
+                         task.tags?.some((t: string) => `#${t.toLowerCase()}`.includes(searchLower));
     const matchesTag = !selectedTag || task.tags?.includes(selectedTag);
     return matchesSearch && matchesTag;
   });
@@ -301,6 +312,7 @@ const Index = () => {
       case 'important': return 'Important';
       case 'planned': return 'Planifié';
       case 'tasks': return 'Tâches';
+      case 'archive': return 'Archive';
       default: {
         const list = customLists.find(l => l.id === activeList);
         return list ? list.name : 'Ma Liste';
@@ -619,7 +631,7 @@ const Index = () => {
           )}
         </AnimatePresence>
 
-        {activeList !== 'dashboard' && (
+        {activeList !== 'dashboard' && activeList !== 'archive' && (
           <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 px-4 sm:px-8">
             <div className="max-w-4xl mx-auto">
               <form 

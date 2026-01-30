@@ -18,7 +18,8 @@ import {
   Plane,
   Settings2,
   BarChart3,
-  User as UserIcon
+  User as UserIcon,
+  Archive
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -130,6 +131,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     { id: 'important', label: 'Important', icon: Star, color: 'text-pink-500' },
     { id: 'planned', label: 'Planifié', icon: Calendar, color: 'text-teal-500' },
     { id: 'tasks', label: 'Tâches', icon: Hash, color: 'text-blue-600' },
+    { id: 'archive', label: 'Archive', icon: Archive, color: 'text-gray-500' },
   ];
 
   const displayName = profile?.first_name 

@@ -1,0 +1,3 @@
+ALTER TABLE public.tasks 
+ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'medium',
+ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false;

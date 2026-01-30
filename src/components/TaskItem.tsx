@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo, RefreshCw, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo, RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -40,6 +40,15 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
 
   const progress = subtaskStats.total > 0 ? (subtaskStats.completed / subtaskStats.total) * 100 : 0;
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-500 bg-red-50 dark:bg-red-500/10';
+      case 'medium': return 'text-orange-500 bg-orange-50 dark:bg-orange-500/10';
+      case 'low': return 'text-blue-500 bg-blue-50 dark:bg-blue-500/10';
+      default: return 'text-gray-400 bg-gray-50 dark:bg-white/5';
+    }
+  };
+
   return (
     <motion.div
       layout
@@ -69,12 +78,14 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
             {task.title}
           </p>
           <div className="flex gap-1 overflow-hidden">
+            {task.priority && task.priority !== 'medium' && (
+              <span className={cn("px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter", getPriorityColor(task.priority))}>
+                {task.priority === 'high' ? 'Urgent' : 'Basse'}
+              </span>
+            )}
             {task.recurrence && task.recurrence !== 'none' && (
               <RefreshCw className="w-3 h-3 text-blue-400 animate-spin-slow" />
             )}
-            {task.tags?.slice(0, 2).map((tag: string) => (
-              <TagBadge key={tag} tag={tag} className="px-1.5 py-0" />
-            ))}
           </div>
         </div>
         

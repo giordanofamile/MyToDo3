@@ -12,7 +12,9 @@ import {
   CheckCircle2, 
   Tag as TagIcon,
   RefreshCw,
-  Clock
+  Clock,
+  AlertTriangle,
+  Archive
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,7 +23,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 import TagBadge from './TagBadge';
 
 interface TaskDetailsProps {
@@ -128,6 +130,26 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Priorité</label>
+                <Select 
+                  value={task.priority || 'medium'} 
+                  onValueChange={(val) => onUpdate(task.id, { priority: val })}
+                >
+                  <SelectTrigger className="rounded-xl bg-white border-gray-100 h-11">
+                    <AlertTriangle className={cn("w-4 h-4 mr-2", 
+                      task.priority === 'high' ? "text-red-500" : 
+                      task.priority === 'low' ? "text-blue-500" : "text-orange-500"
+                    )} />
+                    <SelectValue placeholder="Moyenne" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-2xl">
+                    <SelectItem value="high">Haute</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="low">Basse</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Récurrence</label>
                 <Select 
                   value={task.recurrence || 'none'} 
@@ -144,19 +166,6 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                     <SelectItem value="monthly">Mensuel</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Estimation</label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-3.5 w-4 h-4 text-orange-500" />
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    className="w-full h-11 pl-10 rounded-xl bg-white border border-gray-100 focus:ring-2 focus:ring-blue-500/20 text-sm"
-                    value={task.estimated_minutes || ''}
-                    onChange={(e) => onUpdate(task.id, { estimated_minutes: parseInt(e.target.value) || 0 })}
-                  />
-                </div>
               </div>
             </div>
 
@@ -249,17 +258,35 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
               />
             </div>
 
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start h-12 rounded-2xl transition-all",
-                task.is_important ? "text-pink-500 bg-pink-50" : "text-gray-600 hover:bg-white"
-              )}
-              onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
-            >
-              <Star className={cn("mr-2 h-4 w-4", task.is_important && "fill-pink-500")} />
-              {task.is_important ? "Marqué comme important" : "Marquer comme important"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start h-12 rounded-2xl transition-all",
+                  task.is_important ? "text-pink-500 bg-pink-50" : "text-gray-600 hover:bg-white"
+                )}
+                onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
+              >
+                <Star className={cn("mr-2 h-4 w-4", task.is_important && "fill-pink-500")} />
+                {task.is_important ? "Marqué comme important" : "Marquer comme important"}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start h-12 rounded-2xl transition-all",
+                  task.is_archived ? "text-indigo-500 bg-indigo-50" : "text-gray-600 hover:bg-white"
+                )}
+                onClick={() => {
+                  onUpdate(task.id, { is_archived: !task.is_archived });
+                  onClose();
+                  showSuccess(task.is_archived ? "Tâche désarchivée" : "Tâche archivée");
+                }}
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                {task.is_archived ? "Désarchiver la tâche" : "Archiver la tâche"}
+              </Button>
+            </div>
           </div>
 
           <div className="p-6 bg-white/50 border-t border-gray-200">
