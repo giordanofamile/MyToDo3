@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Star, Clock, Paperclip, Image as ImageIcon, Layout, Activity } from 'lucide-react';
+import { Star, Clock, Paperclip, Image as ImageIcon, Layout, Activity, AlignLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -97,14 +97,21 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
                                 <img src={task.header_image} alt="" className="w-full h-full object-cover" />
                               </div>
                             )}
-                            <h4 className="font-bold text-sm mb-2 dark:text-white line-clamp-2">{task.title}</h4>
+                            <h4 className="font-bold text-sm mb-1 dark:text-white line-clamp-2">{task.title}</h4>
                             
-                            <div className="flex items-center justify-between mt-4">
+                            {task.description && (
+                              <p className="text-[10px] text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+                                {task.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2">
                                 {task.is_important && <Star className="w-3 h-3 text-pink-500 fill-current" />}
                                 {task.due_date && <Clock className="w-3 h-3 text-blue-500" />}
                               </div>
                               <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
+                                {task.description && <AlignLeft className="w-3 h-3" />}
                                 <ImageIcon className="w-3 h-3" />
                                 <Paperclip className="w-3 h-3" />
                               </div>

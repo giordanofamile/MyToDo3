@@ -26,8 +26,8 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 h-full flex flex-col">
+      <div className="flex items-center justify-between flex-none">
         <div>
           <h2 className="text-3xl font-black tracking-tight dark:text-white">Rapport d'Activité</h2>
           <p className="text-gray-500 font-medium">Analyse détaillée de votre productivité</p>
@@ -42,9 +42,9 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 overflow-hidden">
         {/* KPIs */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
           <motion.div 
             whileHover={{ scale: 1.02 }}
             className="bg-white dark:bg-white/5 p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/10 shadow-xl"
@@ -72,15 +72,29 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
             <h3 className="text-4xl font-black dark:text-white">{pending}</h3>
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">En Attente</p>
           </motion.div>
+
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="bg-white dark:bg-white/5 p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/10 shadow-xl"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-pink-500" />
+              </div>
+              <span className="text-[10px] font-black text-pink-500 bg-pink-500/10 px-2 py-1 rounded-full">Prioritaire</span>
+            </div>
+            <h3 className="text-4xl font-black dark:text-white">{important}</h3>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">Tâches Importantes</p>
+          </motion.div>
         </div>
 
         {/* Graphiques */}
-        <div className="lg:col-span-2 bg-white dark:bg-white/5 p-8 rounded-[3rem] border border-gray-100 dark:border-white/10 shadow-xl">
-          <div className="flex items-center justify-between mb-8">
+        <div className="lg:col-span-2 bg-white dark:bg-white/5 p-8 rounded-[3rem] border border-gray-100 dark:border-white/10 shadow-xl flex flex-col">
+          <div className="flex items-center justify-between mb-8 flex-none">
             <h4 className="text-xl font-bold dark:text-white">Répartition de la Charge</h4>
             <TrendingUp className="w-5 h-5 text-blue-500" />
           </div>
-          <div className="h-80 w-full">
+          <div className="flex-1 w-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data}>
                 <Tooltip 

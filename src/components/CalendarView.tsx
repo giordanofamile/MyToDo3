@@ -5,6 +5,7 @@ import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { AlignLeft } from 'lucide-react';
 
 interface CalendarViewProps {
   tasks: any[];
@@ -31,10 +32,10 @@ const CalendarView = ({ tasks, onTaskClick }: CalendarViewProps) => {
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/50 dark:border-white/10 shadow-xl"
+      className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/50 dark:border-white/10 shadow-xl h-full flex flex-col"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="flex justify-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 flex-1 overflow-hidden">
+        <div className="flex justify-center items-start pt-4">
           <Calendar
             mode="single"
             locale={fr}
@@ -51,14 +52,14 @@ const CalendarView = ({ tasks, onTaskClick }: CalendarViewProps) => {
           />
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-xl font-bold dark:text-white flex items-center gap-2">
+        <div className="flex flex-col h-full overflow-hidden">
+          <h3 className="text-xl font-bold dark:text-white flex items-center gap-2 mb-6 flex-none">
             Échéances à venir
             <Badge variant="secondary" className="rounded-full bg-blue-500/10 text-blue-600 border-none">
               {tasksWithDates.length}
             </Badge>
           </h3>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
             {tasksWithDates.length > 0 ? (
               tasksWithDates
                 .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
@@ -66,20 +67,28 @@ const CalendarView = ({ tasks, onTaskClick }: CalendarViewProps) => {
                   <button
                     key={task.id}
                     onClick={() => onTaskClick(task)}
-                    className="w-full flex items-center justify-between p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:shadow-md transition-all text-left group"
+                    className="w-full flex flex-col p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:shadow-md transition-all text-left group"
                   >
-                    <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between w-full mb-1">
                       <p className="font-bold text-sm dark:text-white truncate group-hover:text-blue-500 transition-colors">
                         {task.title}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">
-                        {format(new Date(task.due_date), 'd MMMM yyyy', { locale: fr })}
-                      </p>
+                      <div className={cn(
+                        "w-2 h-2 rounded-full ml-4 flex-none",
+                        task.is_important ? "bg-pink-500" : "bg-blue-500"
+                      )} />
                     </div>
-                    <div className={cn(
-                      "w-2 h-2 rounded-full ml-4",
-                      task.is_important ? "bg-pink-500" : "bg-blue-500"
-                    )} />
+                    
+                    {task.description && (
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium mb-2 line-clamp-1">
+                        <AlignLeft className="w-3 h-3" />
+                        {task.description}
+                      </div>
+                    )}
+
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                      {format(new Date(task.due_date), 'd MMMM yyyy', { locale: fr })}
+                    </p>
                   </button>
                 ))
             ) : (
