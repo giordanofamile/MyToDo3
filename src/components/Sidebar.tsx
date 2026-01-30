@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sun, Star, Calendar, Hash, Plus, LogOut, Search, Moon, Trash2, 
-  Settings2, BarChart3, Archive, AlertCircle, CalendarDays, ChevronRight, ChevronDown,
-  GripVertical, FolderInput, FolderPlus
+  Settings2, BarChart3, CalendarDays, ChevronRight, ChevronDown,
+  FolderPlus
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,10 +19,11 @@ interface SidebarProps {
   setActiveList: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  lists: any[];
+  onListsUpdate: () => void;
 }
 
-const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: SidebarProps) => {
-  const [lists, setLists] = useState<any[]>([]);
+const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists, onListsUpdate }: SidebarProps) => {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -31,16 +31,15 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<any>(null);
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     fetchUser();
-    fetchLists();
     fetchCounts();
-  }, []);
+  }, [lists]);
 
   const fetchUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -51,12 +50,6 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
     setProfile(data);
-  };
-
-  const fetchLists = async () => {
-    const { data, error } = await supabase.from('lists').select('*').order('created_at', { ascending: true });
-    if (error) showError(error.message);
-    else setLists(data || []);
   };
 
   const fetchCounts = async () => {
@@ -75,17 +68,17 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
 
   const handleSaveList = async (listData: any) => {
     if (editingList?.id) {
-      const { data, error } = await supabase.from('lists').update(listData).eq('id', editingList.id).select();
+      const { error } = await supabase.from('lists').update(listData).eq('id', editingList.id);
       if (error) showError(error.message);
       else {
-        setLists(lists.map(l => l.id === editingList.id ? data[0] : l));
+        onListsUpdate();
         showSuccess("Liste mise à jour");
       }
     } else {
       const { data, error } = await supabase.from('lists').insert([{ ...listData, user_id: user.id }]).select();
       if (error) showError(error.message);
       else {
-        setLists([...lists, data[0]]);
+        onListsUpdate();
         setActiveList(data[0].id);
         showSuccess("Liste créée");
       }
@@ -99,7 +92,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     const { error } = await supabase.from('lists').delete().eq('id', id);
     if (error) showError(error.message);
     else {
-      setLists(lists.filter(l => l.id !== id));
+      onListsUpdate();
       if (activeList === id) setActiveList('my-day');
       showSuccess("Liste supprimée");
     }

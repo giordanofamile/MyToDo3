@@ -6,25 +6,17 @@ import TaskItem from '@/components/TaskItem';
 import TaskDetails from '@/components/TaskDetails';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import Dashboard from '@/components/Dashboard';
-import TagBadge from '@/components/TagBadge';
-import ShortcutsModal from '@/components/ShortcutsModal';
 import CalendarView from '@/components/CalendarView';
 import ZenFocus from '@/components/ZenFocus';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, ArrowUpDown, CheckCircle, Calendar as CalendarIcon, Trash2, Sparkles, Timer, 
-  Maximize2, Minimize2, CheckSquare, Square, X, HelpCircle, GripVertical, Menu, 
-  LayoutList, CalendarDays, FolderInput, AlertTriangle, Copy, Eraser, Info
+  Plus, Timer, CheckCircle, Calendar as CalendarIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { addDays, addWeeks, addMonths, format, isPast, isToday, endOfDay } from 'date-fns';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useIsMobile } from '@/hooks/use-mobile';
 import confetti from 'canvas-confetti';
 
@@ -48,36 +40,6 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Raccourcis clavier
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
-      switch (e.key.toLowerCase()) {
-        case 'n':
-          e.preventDefault();
-          inputRef.current?.focus();
-          break;
-        case 'f':
-          if (selectedTask) setIsFocusMode(true);
-          else showError("Sélectionnez une tâche pour le mode Focus");
-          break;
-        case 'p':
-          setIsTimerOpen(prev => !prev);
-          break;
-        case 'c':
-          setActiveList('calendar');
-          break;
-        case 'd':
-          setActiveList('dashboard');
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTask]);
-
   useEffect(() => {
     if (session) {
       fetchTasks();
@@ -86,7 +48,7 @@ const Index = () => {
   }, [session, activeList]);
 
   const fetchLists = async () => {
-    const { data } = await supabase.from('lists').select('*');
+    const { data } = await supabase.from('lists').select('*').order('created_at', { ascending: true });
     setCustomLists(data || []);
   };
 
@@ -94,7 +56,6 @@ const Index = () => {
     if (activeList === 'dashboard') return;
     setLoading(true);
     
-    // Pour le calendrier, on récupère toutes les tâches non archivées
     let query = supabase.from('tasks').select('*').eq('is_archived', false);
     
     if (activeList === 'important') query = query.eq('is_important', true);
@@ -161,19 +122,40 @@ const Index = () => {
       </AnimatePresence>
 
       {!isFocusMode && !isMobile && (
-        <Sidebar activeList={activeList} setActiveList={setActiveList} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <Sidebar 
+          activeList={activeList} 
+          setActiveList={setActiveList} 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery}
+          lists={customLists}
+          onListsUpdate={fetchLists}
+        />
       )}
       
       <main className={cn(
         "flex-1 flex flex-col relative transition-all duration-700 overflow-hidden",
         currentList?.bg_color || "bg-[#F5F5F7]/40 dark:bg-black/20"
       )}>
-        {currentList?.bg_image && (
-          <div className="absolute inset-0 z-0">
-            <img src={currentList.bg_image} alt="Background" className="w-full h-full object-cover opacity-10 dark:opacity-20" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white dark:via-black/50 dark:to-[#1C1C1E]" />
-          </div>
-        )}
+        {/* Background Image Layer */}
+        <AnimatePresence mode="wait">
+          {currentList?.bg_image && (
+            <motion.div 
+              key={currentList.bg_image}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7 }}
+              className="absolute inset-0 z-0"
+            >
+              <img 
+                src={currentList.bg_image} 
+                alt="Background" 
+                className="w-full h-full object-cover opacity-40 dark:opacity-30" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-white dark:via-black/40 dark:to-[#1C1C1E]" />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="relative z-10 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
           {activeList === 'dashboard' ? (
