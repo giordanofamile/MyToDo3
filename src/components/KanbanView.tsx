@@ -3,8 +3,9 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
 import { 
   Star, Clock, Paperclip, Image as ImageIcon, Layout, 
-  Activity, AlignLeft, Calendar, Tag as TagIcon, ChevronDown 
+  Activity, AlignLeft, Calendar, Tag as TagIcon, ChevronDown, Hash 
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, startOfMonth, startOfYear } from 'date-fns';
@@ -119,7 +120,7 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
       <div className="flex items-center gap-3 mb-8">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 h-10 px-4 border-none bg-white dark:bg-white/5 shadow-sm">
+            <Button variant="outline" className="rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 h-10 px-4 border-none bg-white/80 dark:bg-white/5 backdrop-blur-md shadow-sm">
               <Layout className="w-4 h-4 text-blue-500" />
               Regrouper par : {pivot.replace('_', ' ')}
               <ChevronDown className="w-3 h-3 opacity-50" />
@@ -154,7 +155,7 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
                   <div className={cn("w-2 h-2 rounded-full", col.color)} />
                   <h3 className="text-[10px] font-black uppercase tracking-widest dark:text-white opacity-60">{col.label}</h3>
                 </div>
-                <span className="text-[10px] font-bold bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full text-gray-400">
+                <span className="text-[10px] font-bold bg-white/50 dark:bg-white/5 px-2 py-0.5 rounded-full text-gray-400">
                   {tasks.filter(t => getTaskGroup(t) === col.id).length}
                 </span>
               </div>
@@ -164,46 +165,58 @@ const KanbanView = ({ tasks, onTaskClick, onUpdateTask }: KanbanViewProps) => {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="flex-1 bg-gray-50/50 dark:bg-white/5 rounded-2xl p-4 space-y-4 min-h-[200px] border border-transparent hover:border-blue-500/10 transition-colors"
+                    className="flex-1 bg-white/20 dark:bg-white/5 backdrop-blur-md rounded-2xl p-4 space-y-4 min-h-[200px] border border-white/10 transition-colors"
                   >
-                    {tasks.filter(t => getTaskGroup(t) === col.id).map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            onClick={() => onTaskClick(task)}
-                            className="bg-white dark:bg-[#2C2C2E] rounded-xl p-4 shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-xl transition-all group cursor-pointer"
-                          >
-                            {task.header_image && (
-                              <div className="h-24 w-full rounded-lg overflow-hidden mb-3">
-                                <img src={task.header_image} alt="" className="w-full h-full object-cover" />
-                              </div>
-                            )}
-                            <h4 className="font-bold text-sm mb-1 dark:text-white line-clamp-2">{task.title}</h4>
-                            
-                            {task.description && (
-                              <p className="text-[10px] text-gray-400 line-clamp-2 mb-3 leading-relaxed">
-                                {task.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-2">
-                                {task.is_important && <Star className="w-3 h-3 text-pink-500 fill-current" />}
-                                {task.due_date && <Clock className="w-3 h-3 text-blue-500" />}
-                              </div>
-                              <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                                {task.description && <AlignLeft className="w-3 h-3" />}
-                                <ImageIcon className="w-3 h-3" />
-                                <Paperclip className="w-3 h-3" />
+                    {tasks.filter(t => getTaskGroup(t) === col.id).map((task, index) => {
+                      const ListIcon = task.lists ? ((LucideIcons as any)[task.lists.icon] || Hash) : null;
+                      
+                      return (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onClick={() => onTaskClick(task)}
+                              className="bg-white/90 dark:bg-[#2C2C2E]/90 backdrop-blur-xl rounded-xl p-4 shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-xl transition-all group cursor-pointer"
+                            >
+                              {task.header_image && (
+                                <div className="h-24 w-full rounded-lg overflow-hidden mb-3">
+                                  <img src={task.header_image} alt="" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                              <h4 className="font-bold text-sm mb-1 dark:text-white line-clamp-2">{task.title}</h4>
+                              
+                              {task.description && (
+                                <p className="text-[10px] text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+                                  {task.description}
+                                </p>
+                              )}
+                              
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center gap-2">
+                                  {task.lists && (
+                                    <div className={cn(
+                                      "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest",
+                                      task.lists.color?.replace('text-', 'bg-') || 'bg-gray-100',
+                                      "bg-opacity-10",
+                                      task.lists.color || "text-gray-400"
+                                    )}>
+                                      {ListIcon && <ListIcon className="w-2.5 h-2.5" />}
+                                      {task.lists.name}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
+                                  {task.is_important && <Star className="w-3 h-3 text-pink-500 fill-current" />}
+                                  {task.due_date && <Clock className="w-3 h-3 text-blue-500" />}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
+                          )}
+                        </Draggable>
+                      );
+                    })}
                     {provided.placeholder}
                   </div>
                 )}

@@ -121,6 +121,7 @@ const Index = () => {
       .from('tasks')
       .select(`
         *,
+        lists(name, color, icon),
         subtasks:subtasks(count)
       `)
       .eq('is_archived', false);
@@ -129,9 +130,8 @@ const Index = () => {
     else if (activeList === 'planned') query = query.not('due_date', 'is', null);
     else if (activeList === 'my-day') query = query.is('list_id', null);
     else if (activeList === 'tasks' || activeList === 'calendar') {
-      // Pas de filtre sur list_id pour ces vues globales
+      // Global views
     } else {
-      // Liste personnalisée : on récupère tous les descendants pour l'affichage récursif
       const descendantIds = getDescendantIds(activeList, customLists);
       query = query.in('list_id', descendantIds);
     }
@@ -167,7 +167,7 @@ const Index = () => {
     const { data, error } = await supabase.from('tasks').insert([newTask]).select();
     if (error) showError(error.message);
     else {
-      setTasks([{ ...data[0], subtask_count: 0 }, ...tasks]);
+      fetchTasks(); // Refresh to get list details
       if (!taskData) setSelectedTask(data[0]);
     }
   };
@@ -228,7 +228,6 @@ const Index = () => {
         )}
         style={currentList?.bg_image ? { backgroundImage: `url(${currentList.bg_image})` } : {}}
       >
-        {/* Overlay pour le contraste si une image est présente */}
         {currentList?.bg_image && (
           <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[2px]" />
         )}

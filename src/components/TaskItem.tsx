@@ -8,8 +8,10 @@ import {
   AlignLeft,
   Clock,
   GripVertical,
-  CheckSquare
+  CheckSquare,
+  Hash
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -25,18 +27,12 @@ interface TaskItemProps {
 
 const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskItemProps) => {
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.is_completed;
+  const ListIcon = task.lists ? ((LucideIcons as any)[task.lists.icon] || Hash) : null;
 
   const onDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('id', task.id);
     e.dataTransfer.setData('type', 'task');
     e.dataTransfer.effectAllowed = 'move';
-    
-    const dragImage = document.createElement('div');
-    dragImage.className = "bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-2xl";
-    dragImage.innerText = task.title;
-    document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(dragImage, 0, 0);
-    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   return (
@@ -49,7 +45,7 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
       onDragStart={onDragStart as any}
       className={cn(
         "group flex items-center gap-4 rounded-xl transition-all cursor-pointer relative",
-        "bg-white dark:bg-[#2C2C2E] border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md",
+        "bg-white/80 dark:bg-[#2C2C2E]/80 backdrop-blur-xl border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md",
         compact ? "p-2 gap-3" : "p-3.5 gap-4",
         task.is_completed && "opacity-60 grayscale-[0.5]"
       )}
@@ -83,46 +79,60 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
             {task.title}
           </h3>
           {task.priority === 'high' && (
-            <span className="flex-none w-1.5 h-1.5 rounded-full bg-red-500" />
+            <span className="flex-none w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           )}
         </div>
         
-        {!compact && (
-          <div className="flex items-center gap-3">
-            {task.description && (
-              <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 truncate max-w-[150px]">
-                <AlignLeft className="w-3 h-3" />
-                <span className="truncate">{task.description}</span>
-              </div>
-            )}
-            
-            <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest">
-              {task.due_date && (
-                <div className={cn(
-                  "flex items-center gap-1",
-                  isOverdue ? "text-red-500" : "text-gray-400"
-                )}>
-                  <Calendar className="w-3 h-3" />
-                  {format(new Date(task.due_date), 'd MMM', { locale: fr })}
+        <div className="flex items-center gap-3 flex-wrap">
+          {task.lists && (
+            <div className={cn(
+              "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest",
+              task.lists.color?.replace('text-', 'bg-') || 'bg-gray-100',
+              "bg-opacity-10",
+              task.lists.color || "text-gray-400"
+            )}>
+              {ListIcon && <ListIcon className="w-2.5 h-2.5" />}
+              {task.lists.name}
+            </div>
+          )}
+
+          {!compact && (
+            <>
+              {task.description && (
+                <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 truncate max-w-[150px]">
+                  <AlignLeft className="w-3 h-3" />
+                  <span className="truncate">{task.description}</span>
                 </div>
               )}
               
-              {task.subtask_count > 0 && (
-                <div className="flex items-center gap-1 text-gray-400">
-                  <CheckSquare className="w-3 h-3" />
-                  {task.subtask_count}
-                </div>
-              )}
+              <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest">
+                {task.due_date && (
+                  <div className={cn(
+                    "flex items-center gap-1",
+                    isOverdue ? "text-red-500" : "text-gray-400"
+                  )}>
+                    <Calendar className="w-3 h-3" />
+                    {format(new Date(task.due_date), 'd MMM', { locale: fr })}
+                  </div>
+                )}
+                
+                {task.subtask_count > 0 && (
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <CheckSquare className="w-3 h-3" />
+                    {task.subtask_count}
+                  </div>
+                )}
 
-              {task.estimated_minutes > 0 && (
-                <div className="flex items-center gap-1 text-orange-500">
-                  <Clock className="w-3 h-3" />
-                  {task.estimated_minutes}m
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                {task.estimated_minutes > 0 && (
+                  <div className="flex items-center gap-1 text-orange-500">
+                    <Clock className="w-3 h-3" />
+                    {task.estimated_minutes}m
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className={cn(
