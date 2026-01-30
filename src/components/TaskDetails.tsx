@@ -128,7 +128,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] md:max-w-3xl h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
+      <DialogContent className="max-w-[95vw] md:max-w-3xl h-[85vh] p-0 overflow-hidden rounded-xl border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
         <div className="flex flex-col h-full w-full overflow-hidden">
           {/* Header Image Section */}
           <div className="relative h-40 sm:h-48 flex-none group">
@@ -136,23 +136,23 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
               <img src={task.header_image} alt="Header" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 flex items-center justify-center">
-                <ImageIcon className="w-12 h-12 text-gray-200" />
+                <ImageIcon className="w-10 h-10 text-gray-200" />
               </div>
             )}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Button 
                 variant="secondary" 
                 size="sm" 
-                className="rounded-xl font-bold text-[10px] uppercase tracking-widest"
+                className="rounded-lg font-bold text-[10px] uppercase tracking-widest"
                 onClick={() => setIsUnsplashOpen(true)}
               >
-                Changer l'image
+                Changer
               </Button>
               {task.header_image && (
                 <Button 
                   variant="destructive" 
                   size="sm" 
-                  className="rounded-xl font-bold text-[10px] uppercase tracking-widest"
+                  className="rounded-lg font-bold text-[10px] uppercase tracking-widest"
                   onClick={() => onUpdate(task.id, { header_image: null })}
                 >
                   Supprimer
@@ -166,7 +166,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             <div className="flex items-center justify-between gap-4 mb-4">
               <div className="flex-1">
                 <input
-                  className="w-full text-xl sm:text-2xl font-black bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300 outline-none"
+                  className="w-full text-xl sm:text-2xl font-bold bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300 outline-none"
                   value={task.title}
                   onChange={(e) => onUpdate(task.id, { title: e.target.value })}
                   placeholder="Titre de la tâche"
@@ -189,12 +189,12 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "rounded-xl h-10 w-10 transition-all",
+                    "rounded-lg h-9 w-9 transition-all",
                     task.is_important ? "text-pink-500" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
                   )}
                   onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
                 >
-                  <Star className={cn("w-5 h-5", task.is_important && "fill-current")} />
+                  <Star className={cn("w-4 h-4", task.is_important && "fill-current")} />
                 </Button>
               </div>
             </div>
@@ -228,13 +228,13 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         <div className="space-y-2">
                           <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Statut</Label>
                           <Select value={task.status || 'En attente'} onValueChange={(val) => onUpdate(task.id, { status: val })}>
-                            <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                            <SelectTrigger className="h-9 rounded-none bg-transparent border-none shadow-none text-sm font-semibold focus:ring-0 p-0">
                               <div className="flex items-center gap-2">
                                 <Activity className="w-4 h-4 text-blue-500" />
                                 <SelectValue placeholder="Statut" />
                               </div>
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                            <SelectContent className="rounded-lg border-none shadow-2xl">
                               {STATUS_OPTIONS.map((opt) => (
                                 <SelectItem key={opt.value} value={opt.value}>
                                   <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                                 key={p}
                                 onClick={() => onUpdate(task.id, { priority: p })}
                                 className={cn(
-                                  "flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                  "flex-1 h-8 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
                                   task.priority === p 
                                     ? p === 'high' ? "bg-red-500 text-white" 
                                       : p === 'medium' ? "bg-orange-500 text-white"
@@ -274,13 +274,13 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         <div className="space-y-2">
                           <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
                           <Select value={task.estimated_minutes?.toString() || '0'} onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}>
-                            <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                            <SelectTrigger className="h-9 rounded-none bg-transparent border-none shadow-none text-sm font-semibold focus:ring-0 p-0">
                               <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-orange-500" />
                                 <SelectValue placeholder="0 min" />
                               </div>
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                            <SelectContent className="rounded-lg border-none shadow-2xl">
                               <SelectItem value="0">Aucune</SelectItem>
                               <SelectItem value="5">5 min</SelectItem>
                               <SelectItem value="15">15 min</SelectItem>
@@ -294,12 +294,12 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                           <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="ghost" className="w-full h-10 rounded-none bg-transparent border-none shadow-none justify-start text-sm font-bold p-0 hover:bg-transparent">
+                              <Button variant="ghost" className="w-full h-9 rounded-none bg-transparent border-none shadow-none justify-start text-sm font-semibold p-0 hover:bg-transparent">
                                 <CalendarIcon className="mr-2 h-4 w-4 text-teal-500" />
                                 {task.due_date ? format(new Date(task.due_date), 'd MMM yyyy', { locale: fr }) : "Ajouter une date"}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 rounded-xl shadow-2xl border-none" align="start">
+                            <PopoverContent className="w-auto p-0 rounded-lg shadow-2xl border-none" align="start">
                               <Calendar
                                 mode="single"
                                 selected={task.due_date ? new Date(task.due_date) : undefined}
@@ -318,7 +318,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                       </Label>
                       <Textarea
                         placeholder="Ajouter une description détaillée..."
-                        className="min-h-[100px] rounded-2xl bg-gray-50 dark:bg-white/5 border-none shadow-none focus-visible:ring-1 focus-visible:ring-blue-500/50 resize-none p-4 text-sm leading-relaxed outline-none"
+                        className="min-h-[100px] rounded-xl bg-gray-50 dark:bg-white/5 border-none shadow-none focus-visible:ring-1 focus-visible:ring-blue-500/50 resize-none p-4 text-sm leading-relaxed outline-none"
                         value={task.description || ''}
                         onChange={(e) => onUpdate(task.id, { description: e.target.value })}
                       />
@@ -333,9 +333,9 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         <div key={sub.id} className="flex items-center gap-3 py-2 group">
                           <button onClick={() => toggleSubtask(sub)} className="transition-transform active:scale-90">
                             {sub.is_completed ? (
-                              <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                              <CheckCircle2 className="w-4 h-4 text-orange-500" />
                             ) : (
-                              <Circle className="w-5 h-5 text-gray-300" />
+                              <Circle className="w-4 h-4 text-gray-300" />
                             )}
                           </button>
                           <span className={cn("flex-1 text-sm font-medium", sub.is_completed && "text-gray-400 line-through")}>
@@ -369,7 +369,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                       <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tags</Label>
                       <div className="flex flex-wrap gap-1.5">
                         {task.tags?.map((tag: string) => (
-                          <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-6 px-2 text-[9px]" />
+                          <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-5 px-2 text-[8px]" />
                         ))}
                       </div>
                       <form onSubmit={addTag} className="flex items-center gap-2 py-2 border-b border-gray-100 dark:border-white/5">
@@ -405,7 +405,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 rounded-xl text-gray-400 hover:text-indigo-500"
+                className="h-9 rounded-lg text-gray-400 hover:text-indigo-500"
                 onClick={() => {
                   onUpdate(task.id, { is_archived: !task.is_archived });
                   onClose();
@@ -417,7 +417,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="h-9 rounded-xl text-gray-400 hover:text-red-500"
+                className="h-9 rounded-lg text-gray-400 hover:text-red-500"
                 onClick={() => { onDelete(task.id); onClose(); }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -427,7 +427,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             
             <Button 
               onClick={onClose}
-              className="h-10 rounded-xl px-6 bg-black dark:bg-white text-white dark:text-black font-bold text-sm shadow-lg"
+              className="h-9 rounded-lg px-6 bg-black dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-widest shadow-md"
             >
               Terminer
             </Button>

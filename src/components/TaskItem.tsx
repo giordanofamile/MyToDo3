@@ -31,9 +31,9 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className={cn(
-        "group flex items-center gap-4 rounded-[2rem] transition-all cursor-pointer",
-        "bg-white dark:bg-[#2C2C2E] border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-xl hover:scale-[1.01]",
-        compact ? "p-2.5 gap-3 rounded-2xl" : "p-4 gap-4",
+        "group flex items-center gap-4 rounded-xl transition-all cursor-pointer",
+        "bg-white dark:bg-[#2C2C2E] border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md",
+        compact ? "p-2 gap-3" : "p-3.5 gap-4",
         task.is_completed && "opacity-60 grayscale-[0.5]"
       )}
       onClick={() => onClick(task)}
@@ -46,16 +46,16 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
         className="flex-none transition-transform active:scale-90"
       >
         {task.is_completed ? (
-          <CheckCircle2 className={cn("text-blue-500", compact ? "w-5 h-5" : "w-6 h-6")} />
+          <CheckCircle2 className={cn("text-blue-500", compact ? "w-4 h-4" : "w-5 h-5")} />
         ) : (
-          <Circle className={cn("text-gray-300 group-hover:text-blue-400", compact ? "w-5 h-5" : "w-6 h-6")} />
+          <Circle className={cn("text-gray-300 group-hover:text-blue-400", compact ? "w-4 h-4" : "w-5 h-5")} />
         )}
       </button>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <h3 className={cn(
-            "font-bold truncate dark:text-white",
+            "font-semibold truncate dark:text-white",
             compact ? "text-xs" : "text-sm",
             task.is_completed && "line-through text-gray-400"
           )}>
@@ -107,11 +107,11 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
             onToggleImportant(task);
           }}
           className={cn(
-            "p-2 rounded-xl transition-colors",
+            "p-1.5 rounded-lg transition-colors",
             task.is_important ? "text-pink-500" : "text-gray-300 hover:text-pink-400"
           )}
         >
-          <Star className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4", task.is_important && "fill-current")} />
+          <Star className={cn(compact ? "w-3 h-3" : "w-3.5 h-3.5", task.is_important && "fill-current")} />
         </button>
       </div>
     </motion.div>
