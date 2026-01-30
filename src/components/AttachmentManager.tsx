@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Paperclip, X, FileText, Image as ImageIcon, Loader2, Download, Trash2 } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import imageCompression from 'browser-image-compression';

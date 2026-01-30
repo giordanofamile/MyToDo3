@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo, RefreshCw, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo, RefreshCw, Clock, AlertCircle, Paperclip, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -18,24 +18,34 @@ interface TaskItemProps {
 
 const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: TaskItemProps) => {
   const [subtaskStats, setSubtaskStats] = useState({ total: 0, completed: 0 });
+  const [attachmentCount, setAttachmentCount] = useState(0);
   const isOverdue = task.due_date && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date)) && !task.is_completed;
 
   useEffect(() => {
-    fetchSubtaskStats();
+    fetchStats();
   }, [task.id]);
 
-  const fetchSubtaskStats = async () => {
-    const { data, error } = await supabase
+  const fetchStats = async () => {
+    // Fetch subtasks
+    const { data: subtasks } = await supabase
       .from('subtasks')
       .select('is_completed')
       .eq('task_id', task.id);
     
-    if (!error && data) {
+    if (subtasks) {
       setSubtaskStats({
-        total: data.length,
-        completed: data.filter(s => s.is_completed).length
+        total: subtasks.length,
+        completed: subtasks.filter(s => s.is_completed).length
       });
     }
+
+    // Fetch attachments count
+    const { count } = await supabase
+      .from('attachments')
+      .select('*', { count: 'exact', head: true })
+      .eq('task_id', task.id);
+    
+    setAttachmentCount(count || 0);
   };
 
   const progress = subtaskStats.total > 0 ? (subtaskStats.completed / subtaskStats.total) * 100 : 0;
@@ -77,14 +87,20 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
           )}>
             {task.title}
           </p>
-          <div className="flex gap-1 overflow-hidden">
+          <div className="flex gap-1 items-center">
+            {task.header_image && (
+              <ImageIcon className="w-3 h-3 text-gray-400" />
+            )}
+            {attachmentCount > 0 && (
+              <div className="flex items-center gap-0.5 text-[10px] text-gray-400 font-bold">
+                <Paperclip className="w-3 h-3" />
+                {attachmentCount}
+              </div>
+            )}
             {task.priority && task.priority !== 'medium' && (
               <span className={cn("px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter", getPriorityColor(task.priority))}>
                 {task.priority === 'high' ? 'Urgent' : 'Basse'}
               </span>
-            )}
-            {task.recurrence && task.recurrence !== 'none' && (
-              <RefreshCw className="w-3 h-3 text-blue-400 animate-spin-slow" />
             )}
           </div>
         </div>
