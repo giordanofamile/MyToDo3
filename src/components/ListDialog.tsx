@@ -16,19 +16,13 @@ const ICON_CATEGORIES: Record<string, string[]> = {
 };
 
 const COLORS = [
-  { name: 'Bleu', class: 'text-blue-500', bg: 'bg-blue-500/10' },
-  { name: 'Rose', class: 'text-pink-500', bg: 'bg-pink-500/10' },
-  { name: 'Violet', class: 'text-purple-500', bg: 'bg-purple-500/10' },
-  { name: 'Orange', class: 'text-orange-500', bg: 'bg-orange-500/10' },
-  { name: 'Vert', class: 'text-green-500', bg: 'bg-green-500/10' },
+  { name: 'Bleu', class: 'text-blue-500', bg: 'bg-blue-500/10', dot: 'bg-blue-500' },
+  { name: 'Rose', class: 'text-pink-500', bg: 'bg-pink-500/10', dot: 'bg-pink-500' },
+  { name: 'Violet', class: 'text-purple-500', bg: 'bg-purple-500/10', dot: 'bg-purple-500' },
+  { name: 'Orange', class: 'text-orange-500', bg: 'bg-orange-500/10', dot: 'bg-orange-500' },
+  { name: 'Vert', class: 'text-green-500', bg: 'bg-green-500/10', dot: 'bg-green-500' },
+  { name: 'Gris', class: 'text-gray-500', bg: 'bg-gray-500/10', dot: 'bg-gray-500' },
 ];
-
-const UNSPLASH_CATEGORIES = ['Minimal', 'Nature', 'Abstract', 'Textures'];
-
-const PHOTO_IDS: Record<string, string[]> = {
-  'Minimal': ['1494438639946-1ebd1d20bf85', '1507525428034-b723cf961d3e', '1483728642387-6c3bdd6c93e5'],
-  'Nature': ['1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05', '1447752875215-b2761acb3c5d'],
-};
 
 interface ListDialogProps {
   isOpen: boolean;
@@ -49,7 +43,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
   });
   const [iconSearch, setIconSearch] = useState('');
   const [images, setImages] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState('Minimal');
 
   useEffect(() => {
     if (initialData) {
@@ -76,8 +69,11 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
   }, [initialData, isOpen]);
 
   const fetchImages = (category: string) => {
-    setActiveCategory(category);
-    const ids = PHOTO_IDS[category] || PHOTO_IDS['Minimal'];
+    const mockIds: Record<string, string[]> = {
+      'Minimal': ['1494438639946-1ebd1d20bf85', '1507525428034-b723cf961d3e', '1483728642387-6c3bdd6c93e5'],
+      'Nature': ['1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05', '1447752875215-b2761acb3c5d'],
+    };
+    const ids = mockIds[category] || mockIds['Minimal'];
     const urls = ids.map(id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=600&q=80`);
     setImages(urls);
   };
@@ -104,11 +100,11 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
           <Tabs defaultValue="general" className="w-full">
             <TabsList className="w-full justify-start bg-transparent border-none h-auto p-0 mb-6 gap-6">
               <TabsTrigger value="general" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent p-0 text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">GÉNÉRAL</TabsTrigger>
-              <TabsTrigger value="appearance" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent p-0 text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">APPARENCE</TabsTrigger>
+              <TabsTrigger value="appearance" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent p-0 text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">ICÔNE</TabsTrigger>
               <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent p-0 text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
-            <div className="h-[300px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="h-[320px] overflow-y-auto custom-scrollbar pr-2">
               <TabsContent value="general" className="mt-0">
                 <div className="space-y-6 py-2">
                   <div className="space-y-2">
@@ -126,8 +122,26 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Ajoutez un contexte..."
-                      className="min-h-[100px] rounded-none bg-transparent border-none resize-none p-0 text-sm focus-visible:ring-0"
+                      className="min-h-[80px] rounded-none bg-transparent border-none resize-none p-0 text-sm focus-visible:ring-0"
                     />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">COULEUR DE L'ICÔNE</Label>
+                    <div className="flex gap-2">
+                      {COLORS.map((color) => (
+                        <button
+                          key={color.class}
+                          onClick={() => setFormData({ ...formData, color: color.class })}
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                            color.dot,
+                            formData.color === color.class ? "ring-4 ring-blue-500/20 scale-110" : "opacity-60 hover:opacity-100"
+                          )}
+                        >
+                          {formData.color === color.class && <Check className="w-4 h-4 text-white" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </TabsContent>
