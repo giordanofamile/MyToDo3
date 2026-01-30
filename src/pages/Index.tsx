@@ -4,8 +4,9 @@ import Auth from './Auth';
 import Sidebar from '@/components/Sidebar';
 import TaskItem from '@/components/TaskItem';
 import TaskDetails from '@/components/TaskDetails';
+import PomodoroTimer from '@/components/PomodoroTimer';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, LayoutGrid, ArrowUpDown, CheckCircle, Calendar, Trash2, Sparkles } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowUpDown, CheckCircle, Calendar, Trash2, Sparkles, Timer, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
@@ -23,11 +24,14 @@ const Index = () => {
   const [session, setSession] = useState<any>(null);
   const [activeList, setActiveList] = useState('my-day');
   const [tasks, setTasks] = useState<any[]>([]);
+  const [customLists, setCustomLists] = useState<any[]>([]);
   const [newTask, setNewTask] = useState('');
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical'>('created');
+  const [isTimerOpen, setIsTimerOpen] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,8 +46,16 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (session) fetchTasks();
+    if (session) {
+      fetchTasks();
+      fetchLists();
+    }
   }, [session, activeList]);
+
+  const fetchLists = async () => {
+    const { data } = await supabase.from('lists').select('*');
+    setCustomLists(data || []);
+  };
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -99,7 +111,6 @@ const Index = () => {
       const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...updates } : t);
       setTasks(updatedTasks);
       
-      // Trigger confetti if all tasks are now completed
       if (updates.is_completed === true) {
         const allCompleted = updatedTasks.length > 0 && updatedTasks.every(t => t.is_completed);
         if (allCompleted) {
@@ -128,7 +139,6 @@ const Index = () => {
   const clearCompleted = async () => {
     const completedIds = tasks.filter(t => t.is_completed).map(t => t.id);
     if (completedIds.length === 0) return;
-
     if (!confirm(`Supprimer les ${completedIds.length} tâches terminées ?`)) return;
 
     const { error } = await supabase.from('tasks').delete().in('id', completedIds);
@@ -161,26 +171,36 @@ const Index = () => {
       case 'planned': return 'Planifié';
       case 'tasks': return 'Tâches';
       default: {
-        const list = customLists?.find(l => l.id === activeList);
+        const list = customLists.find(l => l.id === activeList);
         return list ? list.name : 'Ma Liste';
       }
     }
   };
 
-  // We need customLists here to get the title, but it's managed in Sidebar. 
-  // For simplicity, let's assume Sidebar handles the list data and we just display.
-  // In a real app, we'd use a context or a global state.
-
   return (
     <div className="flex h-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased transition-colors duration-500">
-      <Sidebar 
-        activeList={activeList} 
-        setActiveList={setActiveList} 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
+      <AnimatePresence>
+        {!isFocusMode && (
+          <motion.div
+            initial={{ x: -300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          >
+            <Sidebar 
+              activeList={activeList} 
+              setActiveList={setActiveList} 
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      <main className="flex-1 flex flex-col bg-[#F5F5F7]/40 dark:bg-black/20 relative">
+      <main className={cn(
+        "flex-1 flex flex-col bg-[#F5F5F7]/40 dark:bg-black/20 relative transition-all duration-500",
+        isFocusMode && "bg-white dark:bg-[#1C1C1E]"
+      )}>
         <div className="max-w-4xl w-full mx-auto px-8 pt-16 pb-32 overflow-y-auto custom-scrollbar">
           <header className="mb-12">
             <div className="flex items-end justify-between mb-6">
@@ -198,13 +218,37 @@ const Index = () => {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsFocusMode(!isFocusMode)}
+                  className={cn(
+                    "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
+                    isFocusMode && "bg-blue-500 text-white hover:bg-blue-600"
+                  )}
+                  title={isFocusMode ? "Quitter le mode Focus" : "Mode Focus"}
+                >
+                  {isFocusMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsTimerOpen(!isTimerOpen)}
+                  className={cn(
+                    "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
+                    isTimerOpen && "bg-orange-500 text-white hover:bg-orange-600"
+                  )}
+                  title="Minuteur Pomodoro"
+                >
+                  <Timer className="w-5 h-5" />
+                </Button>
                 {completedCount > 0 && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     onClick={clearCompleted}
                     className="rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all"
-                    title="Supprimer les tâches terminées"
+                    title="Supprimer les terminées"
                   >
                     <Trash2 className="w-5 h-5" />
                   </Button>
@@ -325,6 +369,11 @@ const Index = () => {
           onClose={() => setSelectedTask(null)}
           onUpdate={updateTask}
           onDelete={deleteTask}
+        />
+
+        <PomodoroTimer 
+          isOpen={isTimerOpen} 
+          onClose={() => setIsTimerOpen(false)} 
         />
       </main>
     </div>
