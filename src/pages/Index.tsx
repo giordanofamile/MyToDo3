@@ -54,7 +54,7 @@ const Index = () => {
     };
     window.addEventListener('task-moved', handleTaskMoved);
     return () => window.removeEventListener('task-moved', handleTaskMoved);
-  }, [activeList]);
+  }, [activeList, customLists]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,16 +87,30 @@ const Index = () => {
 
   useEffect(() => {
     if (session) {
-      fetchTasks();
       fetchLists();
     }
-  }, [session, activeList]);
+  }, [session]);
+
+  useEffect(() => {
+    if (session) {
+      fetchTasks();
+    }
+  }, [session, activeList, customLists]);
 
   const fetchLists = async () => {
     const { data } = await supabase.from('lists').select('*').order('created_at', { ascending: true });
     setCustomLists(data || []);
     const current = data?.find(l => l.id === activeList);
     if (current?.preferred_view) setViewType(current.preferred_view as ViewType);
+  };
+
+  const getDescendantIds = (parentId: string, allLists: any[]): string[] => {
+    let ids: string[] = [parentId];
+    const children = allLists.filter(l => l.parent_id === parentId);
+    children.forEach(child => {
+      ids = [...ids, ...getDescendantIds(child.id, allLists)];
+    });
+    return ids;
   };
 
   const fetchTasks = async () => {
@@ -114,7 +128,13 @@ const Index = () => {
     if (activeList === 'important') query = query.eq('is_important', true);
     else if (activeList === 'planned') query = query.not('due_date', 'is', null);
     else if (activeList === 'my-day') query = query.is('list_id', null);
-    else if (activeList !== 'tasks' && activeList !== 'calendar') query = query.eq('list_id', activeList);
+    else if (activeList === 'tasks' || activeList === 'calendar') {
+      // Pas de filtre sur list_id pour ces vues globales
+    } else {
+      // Liste personnalisée : on récupère tous les descendants pour l'affichage récursif
+      const descendantIds = getDescendantIds(activeList, customLists);
+      query = query.in('list_id', descendantIds);
+    }
     
     const { data, error } = await query.order('position', { ascending: true });
     
