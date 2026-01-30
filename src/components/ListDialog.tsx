@@ -110,7 +110,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
-            <div className="h-[420px] overflow-hidden">
+            <div className="h-[450px] px-1">
               <TabsContent value="general" className="space-y-8 mt-0 h-full animate-in fade-in-50 duration-300">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">NOM DE LA LISTE</Label>
@@ -132,8 +132,8 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 </div>
               </TabsContent>
 
-              <TabsContent value="appearance" className="space-y-6 mt-0 h-full flex flex-col animate-in fade-in-50 duration-300">
-                <div className="flex items-center gap-3 bg-white dark:bg-white/5 rounded-2xl px-4 h-12 shadow-sm">
+              <TabsContent value="appearance" className="mt-0 h-full flex flex-col animate-in fade-in-50 duration-300">
+                <div className="flex items-center gap-3 bg-white dark:bg-white/5 rounded-2xl px-4 h-12 shadow-sm mb-6">
                   <Search className="w-4 h-4 text-[#94A3B8]" />
                   <input 
                     placeholder="Rechercher une icône..." 
@@ -143,25 +143,37 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                   />
                 </div>
                 <ScrollArea className="flex-1 pr-4 custom-scrollbar">
-                  <div className="grid grid-cols-5 gap-3 pb-4">
-                    {Object.values(ICON_CATEGORIES).flat().filter(i => i.toLowerCase().includes(iconSearch.toLowerCase())).map((iconName) => {
-                      const Icon = (LucideIcons as any)[iconName];
+                  <div className="space-y-8 pb-6">
+                    {Object.entries(ICON_CATEGORIES).map(([category, icons]) => {
+                      const filteredIcons = icons.filter(i => i.toLowerCase().includes(iconSearch.toLowerCase()));
+                      if (filteredIcons.length === 0) return null;
+                      
                       return (
-                        <button
-                          key={iconName}
-                          onClick={() => setFormData({ ...formData, icon: iconName })}
-                          className={cn(
-                            "flex items-center justify-center h-14 rounded-2xl transition-all",
-                            formData.icon === iconName ? "bg-white dark:bg-white/10 shadow-lg scale-105 ring-2 ring-[#3B82F6]/20" : "hover:bg-white/50 dark:hover:bg-white/5 text-[#94A3B8]"
-                          )}
-                        >
-                          {Icon && <Icon className={cn("w-6 h-6", formData.icon === iconName && formData.color)} />}
-                        </button>
+                        <div key={category} className="space-y-3">
+                          <h4 className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest ml-1">{category}</h4>
+                          <div className="grid grid-cols-5 gap-3">
+                            {filteredIcons.map((iconName) => {
+                              const Icon = (LucideIcons as any)[iconName];
+                              return (
+                                <button
+                                  key={iconName}
+                                  onClick={() => setFormData({ ...formData, icon: iconName })}
+                                  className={cn(
+                                    "flex items-center justify-center h-14 rounded-2xl transition-all",
+                                    formData.icon === iconName ? "bg-white dark:bg-white/10 shadow-lg scale-105 ring-2 ring-[#3B82F6]/20" : "hover:bg-white/50 dark:hover:bg-white/5 text-[#94A3B8]"
+                                  )}
+                                >
+                                  {Icon && <Icon className={cn("w-6 h-6", formData.icon === iconName && formData.color)} />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
                 </ScrollArea>
-                <div className="pt-4 border-t border-[#E2E8F0] dark:border-white/5">
+                <div className="pt-4 border-t border-[#E2E8F0] dark:border-white/5 mt-auto">
                   <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                     {COLORS.map((color) => (
                       <button
