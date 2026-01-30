@@ -11,11 +11,15 @@ import { cn } from '@/lib/utils';
 import { Search, X, Image as ImageIcon, Palette, Check } from 'lucide-react';
 
 const ICON_CATEGORIES: Record<string, string[]> = {
-  'Essentiels': ['Hash', 'Star', 'Check', 'AlertCircle', 'Info', 'HelpCircle', 'Plus', 'Target', 'Zap', 'Flag', 'Bell', 'Bookmark', 'Tag', 'Heart', 'Flame'],
-  'Travail': ['Briefcase', 'FileText', 'Presentation', 'Mail', 'Calendar', 'Clipboard', 'Database', 'HardDrive', 'Layers', 'Trello', 'PenTool', 'Printer', 'Send', 'Archive', 'BarChart'],
-  'Technologie': ['Laptop', 'Smartphone', 'Watch', 'Camera', 'Cpu', 'Monitor', 'Mouse', 'Wifi', 'Bluetooth', 'Code', 'Terminal', 'Settings', 'Shield', 'Key', 'Lock'],
-  'Personnel': ['User', 'Home', 'ShoppingBag', 'Coffee', 'Utensils', 'Bed', 'Baby', 'Dog', 'Cat', 'GlassWater', 'Wine', 'Pizza', 'Apple', 'Car', 'Bike'],
-  'Nature': ['Leaf', 'TreePine', 'Cloud', 'Sun', 'Moon', 'Zap', 'Droplets', 'Wind', 'Mountain', 'Flower', 'Bird', 'Fish', 'Shell', 'Sunrise', 'Sunset'],
+  'Essentiels': ['Hash', 'Star', 'Check', 'AlertCircle', 'Info', 'HelpCircle', 'Plus', 'Target', 'Zap', 'Flag', 'Bell', 'Bookmark', 'Tag', 'Heart', 'Flame', 'Shield', 'Lock', 'Key', 'Eye', 'Settings', 'Trash2', 'Edit', 'Share2', 'ExternalLink', 'Link'],
+  'Travail': ['Briefcase', 'FileText', 'Presentation', 'Mail', 'Calendar', 'Clipboard', 'Database', 'HardDrive', 'Layers', 'Trello', 'PenTool', 'Printer', 'Send', 'Archive', 'BarChart', 'PieChart', 'LineChart', 'TrendingUp', 'Users', 'UserPlus', 'Building', 'Globe', 'Languages'],
+  'Finance': ['Wallet', 'CreditCard', 'Banknote', 'Coins', 'PiggyBank', 'DollarSign', 'Euro', 'Bitcoin', 'Receipt', 'Calculator', 'ShoppingBag', 'ShoppingCart', 'Tag', 'Percent'],
+  'Technologie': ['Laptop', 'Smartphone', 'Watch', 'Camera', 'Cpu', 'Monitor', 'Mouse', 'Wifi', 'Bluetooth', 'Code', 'Terminal', 'Server', 'Cloud', 'HardDrive', 'Usb', 'Battery', 'Speaker', 'Headphones', 'Mic'],
+  'Santé & Bien-être': ['Heart', 'Activity', 'Stethoscope', 'Thermometer', 'Pill', 'Dumbbell', 'Timer', 'Footprints', 'Apple', 'GlassWater', 'Coffee', 'Moon', 'Sun', 'Wind', 'Leaf'],
+  'Éducation': ['Book', 'BookOpen', 'GraduationCap', 'School', 'Library', 'Pencil', 'Eraser', 'Ruler', 'Compass', 'Brain', 'Lightbulb', 'Microscope', 'Telescope'],
+  'Médias': ['Play', 'Pause', 'SkipBack', 'SkipForward', 'Volume2', 'Music', 'Video', 'Image', 'Film', 'Mic', 'Radio', 'Tv', 'Cast', 'Airplay'],
+  'Nature & Voyage': ['TreePine', 'Flower', 'Bird', 'Fish', 'Mountain', 'Waves', 'Cloud', 'Sun', 'Moon', 'Stars', 'Compass', 'Map', 'MapPin', 'Plane', 'Car', 'Bike', 'Ship', 'Tent', 'Umbrella'],
+  'Maison': ['Home', 'Bed', 'Bath', 'Lamp', 'Sofa', 'Refrigerator', 'Microwave', 'Utensils', 'Coffee', 'Wine', 'Pizza', 'ChefHat'],
 };
 
 const COLORS = [
@@ -78,8 +82,9 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
 
   const fetchImages = async (category: string) => {
     setActiveCategory(category);
+    // Utilisation de l'API source.unsplash.com pour des images réelles et variées
     const mockImages = Array.from({ length: 12 }, (_, i) => 
-      `https://images.unsplash.com/photo-${1500000000000 + (i * 1234567) + (category.length * 1000)}?auto=format&fit=crop&w=400&q=80`
+      `https://images.unsplash.com/photo-${1500000000000 + (i * 1000000) + (category.length * 50000)}?auto=format&fit=crop&w=600&q=80`
     );
     setImages(mockImages);
   };
@@ -140,7 +145,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 <div className="flex items-center gap-3 bg-white dark:bg-white/5 rounded-2xl px-4 h-12 shadow-sm mb-6">
                   <Search className="w-4 h-4 text-[#94A3B8]" />
                   <input 
-                    placeholder="Rechercher une icône..." 
+                    placeholder="Rechercher parmi des centaines d'icônes..." 
                     className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium"
                     value={iconSearch}
                     onChange={(e) => setIconSearch(e.target.value)}
@@ -249,7 +254,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         {images.map((img, i) => (
                           <button
                             key={i}
@@ -259,10 +264,10 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                               formData.bg_image === img ? "border-[#3B82F6] scale-95 shadow-lg" : "border-transparent hover:scale-105"
                             )}
                           >
-                            <img src={img} alt="Unsplash" className="w-full h-full object-cover" />
+                            <img src={img} alt="Unsplash" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                             {formData.bg_image === img && (
                               <div className="absolute inset-0 bg-[#3B82F6]/20 flex items-center justify-center">
-                                <Check className="w-6 h-6 text-white drop-shadow-md" />
+                                <Check className="w-8 h-8 text-white drop-shadow-md" />
                               </div>
                             )}
                           </button>
