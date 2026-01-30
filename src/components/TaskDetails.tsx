@@ -143,7 +143,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 mr-8"> {/* Ajout de marge pour ne pas chevaucher la croix par défaut */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -154,9 +154,6 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
                 >
                   <Star className={cn("w-5 h-5", task.is_important && "fill-current")} />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl h-10 w-10 text-gray-400">
-                  <X className="w-5 h-5" />
                 </Button>
               </div>
             </div>
