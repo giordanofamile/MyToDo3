@@ -91,6 +91,18 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     setEditingList(null);
   };
 
+  const handleDeleteList = async (id: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer cette liste et toutes ses tâches ?")) return;
+    
+    const { error } = await supabase.from('lists').delete().eq('id', id);
+    if (error) showError(error.message);
+    else {
+      setLists(lists.filter(l => l.id !== id));
+      if (activeList === id) setActiveList('my-day');
+      showSuccess("Liste supprimée");
+    }
+  };
+
   const toggleExpand = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const newExpanded = new Set(expandedLists);
@@ -148,6 +160,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                         setEditingList({ parent_id: list.id }); 
                         setIsListDialogOpen(true); 
                       }}
+                      title="Ajouter une sous-liste"
                       className="p-1 hover:bg-blue-500/10 rounded-md transition-colors"
                     >
                       <FolderPlus className="w-3.5 h-3.5 text-blue-500" />
@@ -158,9 +171,20 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                         setEditingList(list); 
                         setIsListDialogOpen(true); 
                       }}
+                      title="Paramètres"
                       className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors"
                     >
                       <Settings2 className="w-3.5 h-3.5 text-gray-300 hover:text-blue-500" />
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        handleDeleteList(list.id);
+                      }}
+                      title="Supprimer"
+                      className="p-1 hover:bg-red-500/10 rounded-md transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-gray-300 hover:text-red-500" />
                     </button>
                   </div>
                 </div>

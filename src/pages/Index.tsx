@@ -37,16 +37,8 @@ const Index = () => {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical' | 'manual'>('manual');
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
-  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -83,12 +75,45 @@ const Index = () => {
     setLoading(false);
   };
 
+  const addTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTask.trim()) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const listId = ['my-day', 'important', 'planned', 'tasks', 'dashboard'].includes(activeList) ? null : activeList;
+    
+    const { data, error } = await supabase.from('tasks').insert([{
+      title: newTask,
+      user_id: user?.id,
+      list_id: listId,
+      is_important: activeList === 'important',
+      due_date: activeList === 'planned' ? new Date().toISOString() : null,
+      position: tasks.length
+    }]).select();
+
+    if (error) showError(error.message);
+    else {
+      setTasks([...tasks, data[0]]);
+      setNewTask('');
+      showSuccess("Tâche ajoutée");
+    }
+  };
+
   const updateTask = async (id: string, updates: any) => {
     const { error } = await supabase.from('tasks').update(updates).eq('id', id);
     if (error) showError(error.message);
     else {
       setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
       if (updates.is_completed === true) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    if (error) showError(error.message);
+    else {
+      setTasks(tasks.filter(t => t.id !== id));
+      showSuccess("Tâche supprimée");
     }
   };
 
@@ -110,7 +135,6 @@ const Index = () => {
         "flex-1 flex flex-col relative transition-all duration-700 overflow-hidden",
         currentList?.bg_color || "bg-[#F5F5F7]/40 dark:bg-black/20"
       )}>
-        {/* Immersion Visuelle (Image de fond) */}
         {currentList?.bg_image && (
           <div className="absolute inset-0 z-0">
             <img src={currentList.bg_image} alt="Background" className="w-full h-full object-cover opacity-10 dark:opacity-20" />
@@ -127,7 +151,7 @@ const Index = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex-1">
                     <motion.h1 key={activeList} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
-                      {currentList?.name || (activeList === 'my-day' ? 'Ma journée' : activeList === 'important' ? 'Important' : 'Tâches')}
+                      {currentList?.name || (activeList === 'my-day' ? 'Ma journée' : activeList === 'important' ? 'Important' : activeList === 'planned' ? 'Planifié' : 'Tâches')}
                     </motion.h1>
                     {currentList?.description && (
                       <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium text-sm italic">
@@ -155,8 +179,23 @@ const Index = () => {
 
               <div className="space-y-3">
                 {tasks.map((task) => (
-                  <TaskItem key={task.id} task={task} onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })} onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })} onDelete={() => {}} onClick={setSelectedTask} />
+                  <TaskItem 
+                    key={task.id} 
+                    task={task} 
+                    onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })} 
+                    onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })} 
+                    onDelete={deleteTask} 
+                    onClick={setSelectedTask} 
+                  />
                 ))}
+                {tasks.length === 0 && !loading && (
+                  <div className="text-center py-20">
+                    <div className="w-20 h-20 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="w-10 h-10 text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 font-medium">Tout est à jour !</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -165,16 +204,27 @@ const Index = () => {
         {activeList !== 'dashboard' && (
           <div className="absolute bottom-10 left-0 right-0 px-8 z-20">
             <div className="max-w-4xl mx-auto">
-              <form onSubmit={(e) => e.preventDefault()} className="bg-white/70 dark:bg-[#2C2C2E]/80 backdrop-blur-3xl p-2.5 rounded-[2rem] shadow-2xl border border-white/50 dark:border-white/10 flex items-center gap-3">
+              <form onSubmit={addTask} className="bg-white/70 dark:bg-[#2C2C2E]/80 backdrop-blur-3xl p-2.5 rounded-[2rem] shadow-2xl border border-white/50 dark:border-white/10 flex items-center gap-3">
                 <div className="p-2.5 bg-blue-500/10 rounded-2xl text-blue-600"><Plus className="w-6 h-6" /></div>
-                <Input placeholder="Ajouter une tâche..." className="border-none bg-transparent focus-visible:ring-0 text-xl h-14 font-medium" />
-                <Button className="bg-black dark:bg-white dark:text-black rounded-2xl px-8 h-12 font-bold">Ajouter</Button>
+                <Input 
+                  placeholder="Ajouter une tâche..." 
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  className="border-none bg-transparent focus-visible:ring-0 text-xl h-14 font-medium" 
+                />
+                <Button type="submit" className="bg-black dark:bg-white dark:text-black rounded-2xl px-8 h-12 font-bold">Ajouter</Button>
               </form>
             </div>
           </div>
         )}
 
-        <TaskDetails task={selectedTask} isOpen={!!selectedTask} onClose={() => setSelectedTask(null)} onUpdate={updateTask} onDelete={() => {}} />
+        <TaskDetails 
+          task={selectedTask} 
+          isOpen={!!selectedTask} 
+          onClose={() => setSelectedTask(null)} 
+          onUpdate={updateTask} 
+          onDelete={deleteTask} 
+        />
         <PomodoroTimer isOpen={isTimerOpen} onClose={() => setIsTimerOpen(false)} />
       </main>
     </div>
