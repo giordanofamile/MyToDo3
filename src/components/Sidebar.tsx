@@ -56,8 +56,21 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
   };
 
   const fetchCounts = async () => {
-    const { data: tasks } = await supabase.from('tasks').select('id, list_id, is_important, due_date, is_completed, is_archived').eq('is_completed', false).eq('is_archived', false);
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('id, list_id, is_important, due_date, is_completed, is_archived')
+      .eq('is_completed', false)
+      .eq('is_archived', false);
+    
     if (!tasks) return;
+
+    // 1. Calculer les comptes directs par list_id
+    const directCounts: Record<string, number> = {};
+    tasks.forEach(t => { 
+      if (t.list_id) directCounts[t.list_id] = (directCounts[t.list_id] || 0) + 1; 
+    });
+
+    // 2. Initialiser les comptes pour les vues statiques
     const newCounts: Record<string, number> = {
       'my-day': tasks.filter(t => !t.list_id).length,
       'important': tasks.filter(t => t.is_important).length,
@@ -65,7 +78,22 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
       'calendar': tasks.filter(t => t.due_date).length,
       'tasks': tasks.length,
     };
-    tasks.forEach(t => { if (t.list_id) newCounts[t.list_id] = (newCounts[t.list_id] || 0) + 1; });
+
+    // 3. Fonction récursive pour sommer les tâches d'une liste et de ses enfants
+    const getRecursiveCount = (listId: string): number => {
+      let total = directCounts[listId] || 0;
+      const children = lists.filter(l => l.parent_id === listId);
+      children.forEach(child => {
+        total += getRecursiveCount(child.id);
+      });
+      return total;
+    };
+
+    // 4. Appliquer le calcul récursif à chaque liste personnalisée
+    lists.forEach(list => {
+      newCounts[list.id] = getRecursiveCount(list.id);
+    });
+
     setCounts(newCounts);
   };
 
@@ -120,13 +148,12 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
       } else if (type === 'task') {
         let updates: any = {};
         
-        // Gestion intelligente des listes spéciales
         if (targetListId === 'important') {
           updates.is_important = true;
         } else if (targetListId === 'my-day') {
           updates.list_id = null;
         } else if (['planned', 'calendar', 'tasks', 'dashboard'].includes(targetListId)) {
-          // On ne change rien de spécial pour ces vues globales
+          // No specific update for global views
         } else {
           updates.list_id = targetListId;
         }
