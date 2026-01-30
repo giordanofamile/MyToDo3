@@ -55,7 +55,9 @@ const Index = () => {
       switch (e.key.toLowerCase()) {
         case 'n':
           e.preventDefault();
-          createNewTask();
+          // Focus sur l'input de la barre rapide si possible
+          const quickInput = document.querySelector('input[placeholder="Ajouter une tâche..."]') as HTMLInputElement;
+          quickInput?.focus();
           break;
         case 'f':
           e.preventDefault();
@@ -177,7 +179,7 @@ const Index = () => {
       )}>
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
           <div className={cn(
-            "flex-1 flex flex-col w-full h-full px-6 sm:px-10 pt-8 pb-6 overflow-y-auto custom-scrollbar",
+            "flex-1 flex flex-col w-full h-full px-6 sm:px-10 pt-8 pb-32 overflow-y-auto custom-scrollbar",
             settings?.compact_mode && "px-4 sm:px-6 pt-4"
           )}>
             <header className={cn("mb-8 flex-none", settings?.compact_mode && "mb-4")}>
@@ -199,7 +201,7 @@ const Index = () => {
               </div>
             </header>
 
-            <div className="flex-1 w-full h-full min-0 pb-32">
+            <div className="flex-1 w-full h-full min-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${activeList}-${viewType}`}
@@ -244,7 +246,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Barre de saisie rapide */}
+        {/* Barre de saisie rapide en pleine largeur */}
         {!['dashboard', 'reports'].includes(activeList) && (
           <QuickTaskBar onAdd={createNewTask} activeList={activeList} />
         )}
