@@ -66,6 +66,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
       'my-day': tasks.filter(t => !t.list_id).length,
       'important': tasks.filter(t => t.is_important).length,
       'planned': tasks.filter(t => t.due_date).length,
+      'calendar': tasks.filter(t => t.due_date).length,
       'tasks': tasks.length,
     };
     tasks.forEach(t => { if (t.list_id) newCounts[t.list_id] = (newCounts[t.list_id] || 0) + 1; });
@@ -200,6 +201,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     { id: 'my-day', label: 'Ma journée', icon: Sun, color: 'text-blue-500' },
     { id: 'important', label: 'Important', icon: Star, color: 'text-pink-500' },
     { id: 'planned', label: 'Planifié', icon: Calendar, color: 'text-teal-500' },
+    { id: 'calendar', label: 'Calendrier', icon: CalendarDays, color: 'text-orange-500' },
     { id: 'tasks', label: 'Tâches', icon: Hash, color: 'text-blue-600' },
   ];
 

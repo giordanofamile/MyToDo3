@@ -40,12 +40,43 @@ const Index = () => {
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const isMobile = useIsMobile();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
+
+  // Raccourcis clavier
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      switch (e.key.toLowerCase()) {
+        case 'n':
+          e.preventDefault();
+          inputRef.current?.focus();
+          break;
+        case 'f':
+          if (selectedTask) setIsFocusMode(true);
+          else showError("Sélectionnez une tâche pour le mode Focus");
+          break;
+        case 'p':
+          setIsTimerOpen(prev => !prev);
+          break;
+        case 'c':
+          setActiveList('calendar');
+          break;
+        case 'd':
+          setActiveList('dashboard');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTask]);
 
   useEffect(() => {
     if (session) {
@@ -62,12 +93,14 @@ const Index = () => {
   const fetchTasks = async () => {
     if (activeList === 'dashboard') return;
     setLoading(true);
+    
+    // Pour le calendrier, on récupère toutes les tâches non archivées
     let query = supabase.from('tasks').select('*').eq('is_archived', false);
     
     if (activeList === 'important') query = query.eq('is_important', true);
     else if (activeList === 'planned') query = query.not('due_date', 'is', null);
     else if (activeList === 'my-day') query = query.is('list_id', null);
-    else if (activeList !== 'tasks') query = query.eq('list_id', activeList);
+    else if (activeList !== 'tasks' && activeList !== 'calendar') query = query.eq('list_id', activeList);
 
     const { data, error } = await query.order('position', { ascending: true });
     if (error) showError(error.message);
@@ -80,14 +113,14 @@ const Index = () => {
     if (!newTask.trim()) return;
 
     const { data: { user } } = await supabase.auth.getUser();
-    const listId = ['my-day', 'important', 'planned', 'tasks', 'dashboard'].includes(activeList) ? null : activeList;
+    const listId = ['my-day', 'important', 'planned', 'tasks', 'dashboard', 'calendar'].includes(activeList) ? null : activeList;
     
     const { data, error } = await supabase.from('tasks').insert([{
       title: newTask,
       user_id: user?.id,
       list_id: listId,
       is_important: activeList === 'important',
-      due_date: activeList === 'planned' ? new Date().toISOString() : null,
+      due_date: activeList === 'planned' || activeList === 'calendar' ? new Date().toISOString() : null,
       position: tasks.length
     }]).select();
 
@@ -145,6 +178,19 @@ const Index = () => {
         <div className="relative z-10 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
           {activeList === 'dashboard' ? (
             <Dashboard onClose={() => setActiveList('my-day')} />
+          ) : activeList === 'calendar' ? (
+            <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 pt-8 sm:pt-16 pb-32">
+              <header className="mb-12 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white">Calendrier</h1>
+                  <p className="text-gray-500 font-medium mt-2">Visualisez vos échéances</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsTimerOpen(!isTimerOpen)} className={cn("rounded-full bg-white/50 dark:bg-white/5 shadow-sm", isTimerOpen && "bg-orange-500 text-white")}>
+                  <Timer className="w-5 h-5" />
+                </Button>
+              </header>
+              <CalendarView tasks={tasks} onTaskClick={setSelectedTask} />
+            </div>
           ) : (
             <div className="max-w-4xl w-full mx-auto px-4 sm:px-8 pt-8 sm:pt-16 pb-32">
               <header className="mb-12">
@@ -201,12 +247,13 @@ const Index = () => {
           )}
         </div>
 
-        {activeList !== 'dashboard' && (
+        {activeList !== 'dashboard' && activeList !== 'calendar' && (
           <div className="absolute bottom-10 left-0 right-0 px-8 z-20">
             <div className="max-w-4xl mx-auto">
               <form onSubmit={addTask} className="bg-white/70 dark:bg-[#2C2C2E]/80 backdrop-blur-3xl p-2.5 rounded-[2rem] shadow-2xl border border-white/50 dark:border-white/10 flex items-center gap-3">
                 <div className="p-2.5 bg-blue-500/10 rounded-2xl text-blue-600"><Plus className="w-6 h-6" /></div>
                 <Input 
+                  ref={inputRef}
                   placeholder="Ajouter une tâche..." 
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
