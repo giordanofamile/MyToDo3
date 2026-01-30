@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { 
   Calendar as CalendarIcon, 
@@ -16,13 +15,11 @@ import {
   Tag as TagIcon,
   RefreshCw,
   Clock,
-  AlertTriangle,
   Archive,
   Layout,
   ListChecks,
   Hash,
-  StickyNote,
-  ChevronRight
+  StickyNote
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -34,7 +31,6 @@ import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import TagBadge from './TagBadge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
 
 interface TaskDetailsProps {
   task: any;
@@ -122,14 +118,14 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl h-[90vh] sm:h-auto sm:max-h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-[#F8F9FA] dark:bg-[#1C1C1E]">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl h-[90vh] sm:h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-[#F8F9FA] dark:bg-[#1C1C1E]">
         <div className="flex flex-col h-full">
-          {/* Header avec Titre et Progression */}
-          <div className="p-6 sm:p-8 bg-white dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
+          {/* Header - Fixed */}
+          <div className="flex-none p-6 sm:p-8 bg-white dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex-1">
                 <input
-                  className="w-full text-2xl sm:text-3xl font-black bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300"
+                  className="w-full text-2xl sm:text-3xl font-black bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300 outline-none"
                   value={task.title}
                   onChange={(e) => onUpdate(task.id, { title: e.target.value })}
                   placeholder="Titre de la tâche"
@@ -184,7 +180,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
           </div>
 
           {/* Content Area - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-transparent">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -192,6 +188,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
+                className="min-h-full"
               >
                 {activeTab === 'general' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -204,12 +201,12 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                               key={p}
                               onClick={() => onUpdate(task.id, { priority: p })}
                               className={cn(
-                                "h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                                "h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
                                 task.priority === p 
-                                  ? p === 'high' ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20" 
-                                    : p === 'medium' ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20"
-                                    : "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20"
-                                  : "bg-white dark:bg-white/5 border-transparent text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10"
+                                  ? p === 'high' ? "bg-red-500 text-white shadow-lg shadow-red-500/20" 
+                                    : p === 'medium' ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                                  : "bg-white dark:bg-white/5 text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10"
                               )}
                             >
                               {p === 'low' ? 'Basse' : p === 'medium' ? 'Moyenne' : 'Haute'}
@@ -221,7 +218,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                       <div className="space-y-3">
                         <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Récurrence</Label>
                         <Select value={task.recurrence || 'none'} onValueChange={(val) => onUpdate(task.id, { recurrence: val })}>
-                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-sm text-sm font-bold">
+                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-none text-sm font-bold focus:ring-0">
                             <div className="flex items-center gap-3">
                               <RefreshCw className="w-5 h-5 text-blue-500" />
                               <SelectValue placeholder="Aucune" />
@@ -241,7 +238,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                       <div className="space-y-3">
                         <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
                         <Select value={task.estimated_minutes?.toString() || '0'} onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}>
-                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-sm text-sm font-bold">
+                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-none text-sm font-bold focus:ring-0">
                             <div className="flex items-center gap-3">
                               <Clock className="w-5 h-5 text-orange-500" />
                               <SelectValue placeholder="0 min" />
@@ -262,7 +259,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-sm justify-start text-sm font-bold">
+                            <Button variant="ghost" className="w-full h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-none justify-start text-sm font-bold hover:bg-white/80 dark:hover:bg-white/10">
                               <CalendarIcon className="mr-3 h-5 w-5 text-teal-500" />
                               {task.due_date ? format(new Date(task.due_date), 'PPP', { locale: fr }) : "Ajouter une date"}
                             </Button>
@@ -288,7 +285,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         <motion.div 
                           layout
                           key={sub.id} 
-                          className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl group shadow-sm border border-transparent hover:border-orange-500/20 transition-all"
+                          className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl group border-none transition-all"
                         >
                           <button onClick={() => toggleSubtask(sub)} className="transition-transform active:scale-90">
                             {sub.is_completed ? (
@@ -308,13 +305,13 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                           </button>
                         </motion.div>
                       ))}
-                      <form onSubmit={addSubtask} className="flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-orange-500/30 transition-all group">
+                      <form onSubmit={addSubtask} className="flex items-center gap-4 p-4 rounded-2xl bg-white/50 dark:bg-white/5 transition-all group">
                         <div className="p-1 bg-orange-500/10 rounded-lg text-orange-500 group-hover:scale-110 transition-transform">
                           <Plus className="w-5 h-5" />
                         </div>
                         <input 
                           placeholder="Ajouter une étape..."
-                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-gray-400"
+                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-gray-400 outline-none"
                           value={newSubtask}
                           onChange={(e) => setNewSubtask(e.target.value)}
                         />
@@ -327,7 +324,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   <div className="space-y-8">
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tags</Label>
-                      <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-white/5 rounded-[2rem] min-h-[100px] shadow-inner">
+                      <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-white/5 rounded-[2rem] min-h-[100px]">
                         {task.tags?.map((tag: string) => (
                           <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-8 px-4 text-xs" />
                         ))}
@@ -337,11 +334,11 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                           </p>
                         )}
                       </div>
-                      <form onSubmit={addTag} className="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-white/5 shadow-sm">
+                      <form onSubmit={addTag} className="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-white/5">
                         <TagIcon className="w-5 h-5 text-purple-500" />
                         <input 
                           placeholder="Nouveau tag (Entrée)"
-                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full"
+                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full outline-none"
                           value={newTag}
                           onChange={(e) => setNewTag(e.target.value)}
                         />
@@ -351,11 +348,11 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 )}
 
                 {activeTab === 'notes' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 h-full">
                     <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Notes détaillées</Label>
                     <Textarea
                       placeholder="Écrivez vos pensées, liens ou détails ici..."
-                      className="min-h-[300px] rounded-[2rem] bg-white dark:bg-white/5 border-none shadow-sm focus-visible:ring-2 focus-visible:ring-teal-500/20 resize-none p-8 text-base leading-relaxed"
+                      className="min-h-[300px] rounded-[2rem] bg-white dark:bg-white/5 border-none shadow-none focus-visible:ring-0 resize-none p-8 text-base leading-relaxed outline-none"
                       value={task.notes || ''}
                       onChange={(e) => onUpdate(task.id, { notes: e.target.value })}
                     />
@@ -365,8 +362,8 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </AnimatePresence>
           </div>
 
-          {/* Footer - Sticky */}
-          <div className="p-6 sm:p-8 bg-white dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Footer - Fixed */}
+          <div className="flex-none p-6 sm:p-8 bg-white dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="ghost"
