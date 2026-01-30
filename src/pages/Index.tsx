@@ -174,6 +174,7 @@ const Index = () => {
       position: index
     }));
 
+    // Mise à jour asynchrone en base
     for (const update of updates) {
       await supabase.from('tasks').update({ position: update.position }).eq('id', update.id);
     }
@@ -225,7 +226,6 @@ const Index = () => {
 
     if (error) showError(error.message);
     else {
-      // Dupliquer aussi les sous-tâches
       const { data: subtasks } = await supabase.from('subtasks').select('*').eq('task_id', task.id);
       if (subtasks && subtasks.length > 0) {
         const newSubtasks = subtasks.map(s => ({
