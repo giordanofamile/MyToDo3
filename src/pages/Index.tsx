@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import TaskItem from '@/components/TaskItem';
 import TaskDetails from '@/components/TaskDetails';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, LayoutGrid, ArrowUpDown, CheckCircle, Calendar } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowUpDown, CheckCircle, Calendar, Trash2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const Index = () => {
   const [session, setSession] = useState<any>(null);
@@ -52,8 +53,6 @@ const Index = () => {
     } else if (activeList === 'planned') {
       query = query.not('due_date', 'is', null);
     } else if (activeList === 'my-day') {
-      // Pour "Ma journée", on pourrait filtrer par date du jour ou simplement les tâches marquées
-      // Ici on garde la logique simple : les tâches créées aujourd'hui ou sans liste spécifique
       query = query.is('list_id', null);
     } else if (activeList !== 'tasks') {
       query = query.eq('list_id', activeList);
@@ -110,6 +109,20 @@ const Index = () => {
     }
   };
 
+  const clearCompleted = async () => {
+    const completedIds = tasks.filter(t => t.is_completed).map(t => t.id);
+    if (completedIds.length === 0) return;
+
+    if (!confirm(`Supprimer les ${completedIds.length} tâches terminées ?`)) return;
+
+    const { error } = await supabase.from('tasks').delete().in('id', completedIds);
+    if (error) showError(error.message);
+    else {
+      setTasks(tasks.filter(t => !t.is_completed));
+      showSuccess(`${completedIds.length} tâches supprimées`);
+    }
+  };
+
   const sortedTasks = [...tasks].sort((a, b) => {
     if (sortBy === 'importance') return (b.is_important ? 1 : 0) - (a.is_important ? 1 : 0);
     if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
@@ -162,6 +175,17 @@ const Index = () => {
                 </p>
               </div>
               <div className="flex gap-2">
+                {completedCount > 0 && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={clearCompleted}
+                    className="rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all"
+                    title="Supprimer les tâches terminées"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm">
@@ -185,12 +209,29 @@ const Index = () => {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{completedCount} sur {tasks.length} terminées</span>
+                    {progress === 100 ? (
+                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 text-blue-500" />
+                    )}
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      {progress === 100 ? "Tout est terminé !" : `${completedCount} sur ${tasks.length} terminées`}
+                    </span>
                   </div>
-                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{Math.round(progress)}%</span>
+                  <span className={cn(
+                    "text-sm font-bold transition-colors",
+                    progress === 100 ? "text-yellow-600 dark:text-yellow-400" : "text-blue-600 dark:text-blue-400"
+                  )}>
+                    {Math.round(progress)}%
+                  </span>
                 </div>
-                <Progress value={progress} className="h-2 bg-gray-200/50 dark:bg-white/10" />
+                <Progress 
+                  value={progress} 
+                  className={cn(
+                    "h-2 bg-gray-200/50 dark:bg-white/10",
+                    progress === 100 && "bg-yellow-500/20"
+                  )} 
+                />
               </motion.div>
             )}
           </header>

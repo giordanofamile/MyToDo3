@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText } from 'lucide-react';
+import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/lib/supabase';
 
 interface TaskItemProps {
   task: any;
@@ -14,7 +15,26 @@ interface TaskItemProps {
 }
 
 const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: TaskItemProps) => {
+  const [subtaskStats, setSubtaskStats] = useState({ total: 0, completed: 0 });
   const isOverdue = task.due_date && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date)) && !task.is_completed;
+
+  useEffect(() => {
+    fetchSubtaskStats();
+  }, [task.id]);
+
+  const fetchSubtaskStats = async () => {
+    const { data, error } = await supabase
+      .from('subtasks')
+      .select('is_completed')
+      .eq('task_id', task.id);
+    
+    if (!error && data) {
+      setSubtaskStats({
+        total: data.length,
+        completed: data.filter(s => s.is_completed).length
+      });
+    }
+  };
 
   return (
     <motion.div
@@ -45,6 +65,14 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
         </p>
         <div className="flex items-center gap-3 mt-1">
           <span className="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Tâches</span>
+          
+          {subtaskStats.total > 0 && (
+            <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded-md">
+              <ListTodo className="w-3 h-3" />
+              {subtaskStats.completed}/{subtaskStats.total}
+            </div>
+          )}
+
           {task.due_date && (
             <div className={cn(
               "flex items-center gap-1 text-[11px] font-medium",
