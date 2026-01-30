@@ -17,7 +17,7 @@ const TimelineView = ({ tasks, onTaskClick }: TimelineViewProps) => {
   const days = eachDayOfInterval({ start, end });
 
   return (
-    <div className="bg-white/50 dark:bg-white/5 backdrop-blur-2xl rounded-[3rem] border border-white/50 dark:border-white/10 overflow-hidden flex flex-col h-full">
+    <div className="bg-white/50 dark:bg-white/5 backdrop-blur-2xl rounded-xl border border-white/50 dark:border-white/10 overflow-hidden flex flex-col h-full">
       <div className="flex border-b border-gray-100 dark:border-white/5 overflow-x-auto no-scrollbar bg-gray-50/50 dark:bg-black/20">
         <div className="flex-none w-48 p-4 font-black text-[10px] uppercase tracking-widest text-gray-400 border-r border-gray-100 dark:border-white/5">
           Tâches
@@ -57,12 +57,12 @@ const TimelineView = ({ tasks, onTaskClick }: TimelineViewProps) => {
                 animate={{ opacity: 1, x: 0 }}
                 onClick={() => onTaskClick(task)}
                 className={cn(
-                  "absolute h-8 rounded-full px-4 flex items-center gap-2 cursor-pointer shadow-lg z-10",
+                  "absolute h-8 rounded-lg px-4 flex items-center gap-2 cursor-pointer shadow-lg z-10",
                   task.priority === 'high' ? "bg-red-500 text-white" : "bg-blue-500 text-white"
                 )}
                 style={{
                   left: `${days.findIndex(d => isSameDay(d, new Date(task.due_date))) * 64 + 8}px`,
-                  width: '140px' // Largeur fixe pour la démo, peut être calculée selon start/end date
+                  width: '140px'
                 }}
               >
                 <Clock className="w-3 h-3" />

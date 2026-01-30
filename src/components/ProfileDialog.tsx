@@ -62,14 +62,14 @@ const ProfileDialog = ({ isOpen, onClose, onUpdate }: ProfileDialogProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[350px] rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E] p-6">
+      <DialogContent className="sm:max-w-[350px] rounded-xl border-none shadow-2xl bg-white dark:bg-[#1C1C1E] p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-black text-center mb-4">Mon Profil</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 py-2">
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-lg bg-blue-500/10 flex items-center justify-center">
               <User className="w-8 h-8 text-blue-500" />
             </div>
           </div>
@@ -98,7 +98,7 @@ const ProfileDialog = ({ isOpen, onClose, onUpdate }: ProfileDialogProps) => {
           <Button 
             onClick={handleSave}
             disabled={loading}
-            className="w-full h-11 bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-xl font-bold transition-all shadow-lg"
+            className="w-full h-11 bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-lg font-bold transition-all shadow-lg"
           >
             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </Button>

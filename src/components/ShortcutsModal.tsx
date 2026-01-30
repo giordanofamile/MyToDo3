@@ -23,7 +23,7 @@ const ShortcutItem = ({ keys, label }: { keys: string[], label: string }) => (
 const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] border-none shadow-2xl bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl">
+      <DialogContent className="sm:max-w-[400px] rounded-xl border-none shadow-2xl bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Zap className="w-6 h-6 text-yellow-500" />

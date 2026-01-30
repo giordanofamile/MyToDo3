@@ -18,7 +18,7 @@ const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
   const dayWidth = 40;
 
   return (
-    <div className="bg-white/50 dark:bg-white/5 backdrop-blur-2xl rounded-[3rem] border border-white/50 dark:border-white/10 overflow-hidden flex flex-col h-full shadow-2xl">
+    <div className="bg-white/50 dark:bg-white/5 backdrop-blur-2xl rounded-xl border border-white/50 dark:border-white/10 overflow-hidden flex flex-col h-full shadow-2xl">
       {/* Header des dates */}
       <div className="flex border-b border-gray-100 dark:border-white/5 overflow-x-auto no-scrollbar bg-gray-50/50 dark:bg-black/40">
         <div className="flex-none w-64 p-6 font-black text-[10px] uppercase tracking-widest text-gray-400 border-r border-gray-100 dark:border-white/5 sticky left-0 bg-inherit z-20">
@@ -73,7 +73,7 @@ const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
                       animate={{ opacity: 1, scaleX: 1 }}
                       onClick={() => onTaskClick(task)}
                       className={cn(
-                        "absolute h-8 rounded-xl flex items-center px-3 cursor-pointer shadow-lg z-10 group/bar overflow-hidden",
+                        "absolute h-8 rounded-lg flex items-center px-3 cursor-pointer shadow-lg z-10 group/bar overflow-hidden",
                         task.priority === 'high' 
                           ? "bg-gradient-to-r from-red-500 to-pink-500 text-white" 
                           : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"

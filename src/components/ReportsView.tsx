@@ -34,10 +34,10 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
           <p className="text-gray-500 font-medium">Analyse détaillée de votre productivité</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="rounded-xl gap-2 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-white/5">
+          <Button variant="outline" className="rounded-lg gap-2 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-white/5">
             <Printer className="w-4 h-4" /> Imprimer
           </Button>
-          <Button className="rounded-xl gap-2 font-bold text-xs uppercase tracking-widest bg-black dark:bg-white text-white dark:text-black shadow-lg hover:scale-105 transition-transform">
+          <Button className="rounded-lg gap-2 font-bold text-xs uppercase tracking-widest bg-black dark:bg-white text-white dark:text-black shadow-lg hover:scale-105 transition-transform">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
         </div>
@@ -56,10 +56,10 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ scale: 1.02, x: 5 }}
-              className="bg-white dark:bg-white/5 p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/10 shadow-xl relative group"
+              className="bg-white dark:bg-white/5 p-8 rounded-xl border border-gray-100 dark:border-white/10 shadow-xl relative group"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-12", `bg-${kpi.color}-500/10`)}>
+                <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center transition-transform group-hover:rotate-12", `bg-${kpi.color}-500/10`)}>
                   <kpi.icon className={cn("w-6 h-6", `text-${kpi.color}-500`)} />
                 </div>
                 <span className={cn("text-[10px] font-black px-2 py-1 rounded-full", `text-${kpi.color}-500 bg-${kpi.color}-500/10`)}>{kpi.trend}</span>
@@ -70,7 +70,7 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
           ))}
         </div>
 
-        <div className="lg:col-span-2 bg-white dark:bg-white/5 p-8 rounded-[3rem] border border-gray-100 dark:border-white/10 shadow-2xl flex flex-col relative overflow-hidden">
+        <div className="lg:col-span-2 bg-white dark:bg-white/5 p-8 rounded-xl border border-gray-100 dark:border-white/10 shadow-2xl flex flex-col relative overflow-hidden">
           <div className="flex items-center justify-between mb-8 flex-none">
             <h4 className="text-xl font-bold dark:text-white">Répartition de la Charge</h4>
             <TrendingUp className="w-5 h-5 text-blue-500" />
@@ -82,38 +82,24 @@ const ReportsView = ({ tasks }: ReportsViewProps) => {
                   <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10B981"/><stop offset="100%" stopColor="#059669"/></linearGradient>
                   <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6"/><stop offset="100%" stopColor="#2563EB"/></linearGradient>
                   <linearGradient id="pinkGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#EC4899"/><stop offset="100%" stopColor="#DB2777"/></linearGradient>
-                  <filter id="3dEffect" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                    <feOffset in="blur" dx="3" dy="3" result="offsetBlur" />
-                    <feSpecularLighting in="blur" surfaceScale="5" specularConstant=".75" specularExponent="20" lightingColor="#bbbbbb" result="specOut">
-                      <fePointLight x="-5000" y="-10000" z="20000" />
-                    </feSpecularLighting>
-                    <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
-                    <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litGraphic" />
-                    <feMerge>
-                      <feMergeNode in="offsetBlur" />
-                      <feMergeNode in="litGraphic" />
-                    </feMerge>
-                  </filter>
                 </defs>
                 <Tooltip 
-                  contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '12px 20px' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '12px 20px' }}
                 />
                 <Bar 
                   dataKey="value" 
-                  radius={[15, 15, 15, 15]}
+                  radius={[8, 8, 8, 8]}
                   animationDuration={2000}
                   animationEasing="ease-out"
                 >
                   {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.grad} style={{ filter: 'url(#3dEffect)' }} />
+                    <Cell key={`cell-${index}`} fill={entry.grad} />
                   ))}
                 </Bar>
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 800, fill: '#94A3B8' }} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full" />
         </div>
       </div>
     </div>

@@ -91,7 +91,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[450px] rounded-xl border-none shadow-2xl bg-white dark:bg-[#1C1C1E] p-0 overflow-hidden">
         <div className="p-6 pb-2">
           <DialogTitle className="text-2xl font-black tracking-tight text-[#1A1A1A] dark:text-white mb-6">
             {initialData?.id ? 'Configurer' : 'Nouvelle liste'}
@@ -147,7 +147,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               </TabsContent>
 
               <TabsContent value="appearance" className="mt-0">
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-xl px-3 h-9 mb-4">
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-lg px-3 h-9 mb-4">
                   <Search className="w-3.5 h-3.5 text-[#94A3B8]" />
                   <input 
                     placeholder="Rechercher..." 
@@ -164,7 +164,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                         key={iconName}
                         onClick={() => setFormData({ ...formData, icon: iconName })}
                         className={cn(
-                          "flex items-center justify-center h-10 rounded-xl transition-all",
+                          "flex items-center justify-center h-10 rounded-lg transition-all",
                           formData.icon === iconName ? "bg-blue-500/10 text-blue-500" : "text-[#94A3B8] hover:bg-gray-50 dark:hover:bg-white/5"
                         )}
                       >
@@ -183,7 +183,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                         key={color.bg}
                         onClick={() => setFormData({ ...formData, bg_color: color.bg, bg_image: '' })}
                         className={cn(
-                          "h-10 rounded-xl transition-all border-2",
+                          "h-10 rounded-lg transition-all border-2",
                           color.bg,
                           formData.bg_color === color.bg ? "border-[#3B82F6]" : "border-transparent"
                         )}
@@ -196,7 +196,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                         key={i}
                         onClick={() => setFormData({ ...formData, bg_image: img, bg_color: '' })}
                         className={cn(
-                          "aspect-video rounded-xl overflow-hidden border-2 transition-all",
+                          "aspect-video rounded-lg overflow-hidden border-2 transition-all",
                           formData.bg_image === img ? "border-[#3B82F6]" : "border-transparent"
                         )}
                       >
@@ -214,7 +214,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
           <Button 
             onClick={handleSave}
             disabled={!formData.name.trim()}
-            className="w-full h-12 rounded-xl font-bold text-sm bg-black dark:bg-white text-white dark:text-black shadow-lg"
+            className="w-full h-12 rounded-lg font-bold text-sm bg-black dark:bg-white text-white dark:text-black shadow-lg"
           >
             {initialData?.id ? 'Enregistrer' : 'Créer'}
           </Button>

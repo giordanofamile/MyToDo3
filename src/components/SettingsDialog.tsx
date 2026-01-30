@@ -46,14 +46,12 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
       return;
     }
 
-    // Tenter de récupérer les réglages
     let { data, error } = await supabase
       .from('user_settings')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    // Si les réglages n'existent pas (compte existant avant la migration), on les crée
     if (error && error.code === 'PGRST116') {
       const { data: newData, error: insertError } = await supabase
         .from('user_settings')
@@ -91,10 +89,10 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 rounded-[2.5rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E] overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 rounded-xl border-none shadow-2xl bg-white dark:bg-[#1C1C1E] overflow-hidden">
         <DialogHeader className="p-8 pb-4 flex-none">
           <DialogTitle className="text-3xl font-black tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500/10 rounded-2xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
               <Settings2 className="w-6 h-6 text-blue-500" />
             </div>
             Réglages
@@ -126,7 +124,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                           key={t}
                           onClick={() => setSettings({ ...settings, theme: t })}
                           className={cn(
-                            "h-12 rounded-2xl border-2 transition-all font-bold text-xs capitalize",
+                            "h-12 rounded-lg border-2 transition-all font-bold text-xs capitalize",
                             settings.theme === t ? "border-blue-500 bg-blue-500/5 text-blue-500" : "border-gray-100 dark:border-white/5 text-gray-400"
                           )}
                         >
@@ -155,7 +153,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[2rem]">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-lg">
                     <div className="space-y-0.5">
                       <Label className="text-sm font-bold">Mode Compact</Label>
                       <p className="text-[10px] text-gray-400 font-medium">Réduit l'espacement des listes</p>
@@ -193,7 +191,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[2rem]">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-lg">
                       <div className="space-y-0.5">
                         <Label className="text-sm font-bold">Démarrage Automatique</Label>
                         <p className="text-[10px] text-gray-400 font-medium">Lance la pause dès que le focus finit</p>
@@ -223,10 +221,10 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ambiance par défaut</Label>
                       <Select value={settings.focus_default_ambience} onValueChange={(val) => setSettings({ ...settings, focus_default_ambience: val })}>
-                        <SelectTrigger className="h-12 rounded-2xl bg-gray-50 dark:bg-white/5 border-none font-bold">
+                        <SelectTrigger className="h-12 rounded-lg bg-gray-50 dark:bg-white/5 border-none font-bold">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        <SelectContent className="rounded-lg border-none shadow-2xl">
                           <SelectItem value="none">Silence</SelectItem>
                           <SelectItem value="rain">Pluie</SelectItem>
                           <SelectItem value="forest">Forêt</SelectItem>
@@ -247,7 +245,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                             key={p}
                             onClick={() => setSettings({ ...settings, tasks_default_priority: p })}
                             className={cn(
-                              "h-12 rounded-2xl border-2 transition-all font-bold text-[10px] uppercase tracking-widest",
+                              "h-12 rounded-lg border-2 transition-all font-bold text-[10px] uppercase tracking-widest",
                               settings.tasks_default_priority === p ? "border-teal-500 bg-teal-500/5 text-teal-500" : "border-gray-100 dark:border-white/5 text-gray-400"
                             )}
                           >
@@ -257,7 +255,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[2rem]">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-lg">
                       <div className="space-y-0.5">
                         <Label className="text-sm font-bold">Afficher les tâches terminées</Label>
                         <p className="text-[10px] text-gray-400 font-medium">Garde les tâches faites visibles</p>
@@ -272,7 +270,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
 
                 <TabsContent value="notifications" className="mt-0 space-y-8">
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[2rem]">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-lg">
                       <div className="space-y-0.5">
                         <Label className="text-sm font-bold">Notifications Bureau</Label>
                         <p className="text-[10px] text-gray-400 font-medium">Alertes système pour les échéances</p>
@@ -283,7 +281,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-[2rem]">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-lg">
                       <div className="space-y-0.5">
                         <Label className="text-sm font-bold">Sons de l'application</Label>
                         <p className="text-[10px] text-gray-400 font-medium">Effets sonores lors de la complétion</p>
@@ -302,7 +300,7 @@ const SettingsDialog = ({ isOpen, onClose }: SettingsDialogProps) => {
               <Button 
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full h-14 rounded-[1.5rem] bg-black dark:bg-white text-white dark:text-black font-black text-lg shadow-xl active:scale-95 transition-all"
+                className="w-full h-14 rounded-lg bg-black dark:bg-white text-white dark:text-black font-black text-lg shadow-xl active:scale-95 transition-all"
               >
                 {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Save className="w-5 h-5 mr-2" /> Enregistrer les réglages</>}
               </Button>

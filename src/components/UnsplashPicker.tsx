@@ -28,14 +28,6 @@ const UnsplashPicker = ({ isOpen, onClose, onSelect }: UnsplashPickerProps) => {
   const fetchImages = async (query: string) => {
     setLoading(true);
     try {
-      // Utilisation de l'API source.unsplash.com (legacy mais simple pour démo) 
-      // ou simulation d'une bibliothèque gigantesque
-      const newImages = Array.from({ length: 12 }, (_, i) => 
-        `https://images.unsplash.com/photo-${Math.random().toString(36).substring(7)}?q=80&w=1000&auto=format&fit=crop&sig=${query}-${i}`
-      );
-      
-      // Pour une vraie implémentation, on utiliserait l'API Unsplash officielle
-      // Ici on simule des IDs réels pour avoir des images cohérentes
       const mockIds: Record<string, string[]> = {
         minimal: ['1494438639946-1ebd1d20bf85', '1507525428034-b723cf961d3e', '1483728642387-6c3bdd6c93e5', '1490750967868-88aa4486c946', '1518133910546-b6c2fb7d79e3', '1454165833767-027ffea9e778'],
         nature: ['1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05', '1447752875215-b2761acb3c5d', '1464822759023-fed622ff2c3b', '1501785888041-af3ef285b470', '1433086566608-06a3a5475673'],
@@ -58,7 +50,7 @@ const UnsplashPicker = ({ isOpen, onClose, onSelect }: UnsplashPickerProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 rounded-[2.5rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
+      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 rounded-xl border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-2xl font-black flex items-center gap-2">
             <ImageIcon className="w-6 h-6 text-blue-500" />
@@ -68,7 +60,7 @@ const UnsplashPicker = ({ isOpen, onClose, onSelect }: UnsplashPickerProps) => {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <Input 
               placeholder="Rechercher une image..." 
-              className="pl-10 bg-gray-50 dark:bg-white/5 border-none h-10 rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+              className="pl-10 bg-gray-50 dark:bg-white/5 border-none h-10 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500/20"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && fetchImages(search)}
@@ -100,7 +92,7 @@ const UnsplashPicker = ({ isOpen, onClose, onSelect }: UnsplashPickerProps) => {
                   <button
                     key={i}
                     onClick={() => { onSelect(url); onClose(); }}
-                    className="aspect-video rounded-2xl overflow-hidden hover:scale-[1.02] transition-all shadow-sm group relative"
+                    className="aspect-video rounded-lg overflow-hidden hover:scale-[1.02] transition-all shadow-sm group relative"
                   >
                     <img src={url} alt="Unsplash" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
