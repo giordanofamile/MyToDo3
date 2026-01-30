@@ -8,6 +8,8 @@ import PomodoroTimer from '@/components/PomodoroTimer';
 import Dashboard from '@/components/Dashboard';
 import CalendarView from '@/components/CalendarView';
 import KanbanView from '@/components/KanbanView';
+import GridView from '@/components/GridView';
+import TimelineView from '@/components/TimelineView';
 import ViewSwitcher, { ViewType } from '@/components/ViewSwitcher';
 import ZenFocus from '@/components/ZenFocus';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,7 +28,6 @@ const Index = () => {
   const [viewType, setViewType] = useState<ViewType>('list');
   const [tasks, setTasks] = useState<any[]>([]);
   const [customLists, setCustomLists] = useState<any[]>([]);
-  const [newTask, setNewTask] = useState('');
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,6 +143,10 @@ const Index = () => {
                   <CalendarView tasks={tasks} onTaskClick={setSelectedTask} />
                 ) : viewType === 'kanban' ? (
                   <KanbanView tasks={tasks} onTaskClick={setSelectedTask} onUpdateTask={updateTask} />
+                ) : viewType === 'grid' ? (
+                  <GridView tasks={tasks} onTaskClick={setSelectedTask} onToggleComplete={(id, completed) => updateTask(id, { is_completed: completed })} />
+                ) : viewType === 'timeline' ? (
+                  <TimelineView tasks={tasks} onTaskClick={setSelectedTask} />
                 ) : (
                   <div className="space-y-3 max-w-4xl mx-auto">
                     {tasks.map((task) => (
