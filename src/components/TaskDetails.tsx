@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon, Star, Trash2, X, Plus, Circle, CheckCircle2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Star, Trash2, X, Plus, Circle, CheckCircle2, Tag as TagIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -10,6 +10,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { showError } from '@/utils/toast';
+import TagBadge from './TagBadge';
 
 interface TaskDetailsProps {
   task: any;
@@ -22,6 +23,7 @@ interface TaskDetailsProps {
 const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsProps) => {
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
+  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
     if (task?.id && isOpen) {
@@ -72,6 +74,20 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
     const { error } = await supabase.from('subtasks').delete().eq('id', id);
     if (error) showError(error.message);
     else setSubtasks(subtasks.filter(s => s.id !== id));
+  };
+
+  const addTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTag.trim()) return;
+    const currentTags = task.tags || [];
+    if (currentTags.includes(newTag.trim())) return;
+    
+    onUpdate(task.id, { tags: [...currentTags, newTag.trim()] });
+    setNewTag('');
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    onUpdate(task.id, { tags: task.tags.filter((t: string) => t !== tagToRemove) });
   };
 
   if (!task) return null;
@@ -131,6 +147,24 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   />
                 </form>
               </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-2">TAGS</label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {task.tags?.map((tag: string) => (
+                  <TagBadge key={tag} tag={tag} onRemove={removeTag} />
+                ))}
+              </div>
+              <form onSubmit={addTag} className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 hover:border-blue-300 transition-colors">
+                <TagIcon className="w-4 h-4 text-gray-400" />
+                <input 
+                  placeholder="Ajouter un tag (Entrée)"
+                  className="bg-transparent border-none focus:ring-0 text-sm w-full"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                />
+              </form>
             </div>
 
             <div className="space-y-2">

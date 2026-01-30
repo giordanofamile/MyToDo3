@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import Auth from './Auth';
 import Sidebar from '@/components/Sidebar';
@@ -32,6 +32,7 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical'>('created');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,6 +52,25 @@ const Index = () => {
       fetchLists();
     }
   }, [session, activeList]);
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      } else if (e.key.toLowerCase() === 'f') {
+        setIsFocusMode(prev => !prev);
+      } else if (e.key.toLowerCase() === 'p') {
+        setIsTimerOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const fetchLists = async () => {
     const { data } = await supabase.from('lists').select('*');
@@ -92,7 +112,8 @@ const Index = () => {
         is_completed: false,
         is_important: activeList === 'important',
         list_id: isCustomList ? activeList : null,
-        due_date: activeList === 'planned' ? new Date().toISOString() : null
+        due_date: activeList === 'planned' ? new Date().toISOString() : null,
+        tags: []
       }])
       .select();
 
@@ -226,7 +247,7 @@ const Index = () => {
                     "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
                     isFocusMode && "bg-blue-500 text-white hover:bg-blue-600"
                   )}
-                  title={isFocusMode ? "Quitter le mode Focus" : "Mode Focus"}
+                  title="Mode Focus (F)"
                 >
                   {isFocusMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
                 </Button>
@@ -238,7 +259,7 @@ const Index = () => {
                     "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
                     isTimerOpen && "bg-orange-500 text-white hover:bg-orange-600"
                   )}
-                  title="Minuteur Pomodoro"
+                  title="Minuteur Pomodoro (P)"
                 >
                   <Timer className="w-5 h-5" />
                 </Button>
@@ -347,9 +368,10 @@ const Index = () => {
                 <Plus className="w-6 h-6" />
               </div>
               <Input 
+                ref={inputRef}
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
-                placeholder="Ajouter une tâche..."
+                placeholder="Ajouter une tâche... (N)"
                 className="border-none bg-transparent focus-visible:ring-0 text-xl placeholder:text-gray-400 dark:text-white h-14 font-medium"
               />
               <Button 

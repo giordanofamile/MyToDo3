@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
+import TagBadge from './TagBadge';
 
 interface TaskItemProps {
   task: any;
@@ -57,12 +58,22 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
       </button>
       
       <div className="flex-1 min-w-0">
-        <p className={cn(
-          "text-[15px] font-medium transition-all duration-300 truncate",
-          task.is_completed ? "text-gray-400 dark:text-gray-600 line-through" : "text-gray-900 dark:text-white"
-        )}>
-          {task.title}
-        </p>
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className={cn(
+            "text-[15px] font-medium transition-all duration-300 truncate",
+            task.is_completed ? "text-gray-400 dark:text-gray-600 line-through" : "text-gray-900 dark:text-white"
+          )}>
+            {task.title}
+          </p>
+          <div className="flex gap-1 overflow-hidden">
+            {task.tags?.slice(0, 2).map((tag: string) => (
+              <TagBadge key={tag} tag={tag} className="px-1.5 py-0" />
+            ))}
+            {task.tags?.length > 2 && (
+              <span className="text-[9px] text-gray-400 font-bold">+{task.tags.length - 2}</span>
+            )}
+          </div>
+        </div>
         <div className="flex items-center gap-3 mt-1">
           <span className="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Tâches</span>
           
