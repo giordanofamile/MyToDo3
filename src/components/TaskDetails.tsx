@@ -19,7 +19,9 @@ import {
   Layout,
   ListChecks,
   Hash,
-  StickyNote
+  StickyNote,
+  Image as ImageIcon,
+  Paperclip
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -31,6 +33,8 @@ import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import TagBadge from './TagBadge';
 import { motion, AnimatePresence } from 'framer-motion';
+import UnsplashPicker from './UnsplashPicker';
+import AttachmentManager from './AttachmentManager';
 
 interface TaskDetailsProps {
   task: any;
@@ -45,6 +49,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
   const [newSubtask, setNewSubtask] = useState('');
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('general');
+  const [isUnsplashOpen, setIsUnsplashOpen] = useState(false);
 
   useEffect(() => {
     if (task?.id && isOpen) {
@@ -118,9 +123,40 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] md:max-w-3xl h-[80vh] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
+      <DialogContent className="max-w-[95vw] md:max-w-3xl h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
         <div className="flex flex-col h-full w-full overflow-hidden">
-          {/* Header - Compact */}
+          {/* Header Image Section */}
+          <div className="relative h-40 sm:h-48 flex-none group">
+            {task.header_image ? (
+              <img src={task.header_image} alt="Header" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 flex items-center justify-center">
+                <ImageIcon className="w-12 h-12 text-gray-200" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="rounded-xl font-bold text-[10px] uppercase tracking-widest"
+                onClick={() => setIsUnsplashOpen(true)}
+              >
+                Changer l'image
+              </Button>
+              {task.header_image && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="rounded-xl font-bold text-[10px] uppercase tracking-widest"
+                  onClick={() => onUpdate(task.id, { header_image: null })}
+                >
+                  Supprimer
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Header Info - Compact */}
           <div className="flex-none p-5 sm:p-6 border-b border-gray-100 dark:border-white/5">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div className="flex-1">
@@ -143,7 +179,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 mr-8"> {/* Ajout de marge pour ne pas chevaucher la croix par défaut */}
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -165,6 +201,9 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 </TabsTrigger>
                 <TabsTrigger value="steps" className="data-[state=active]:text-orange-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
                   Étapes
+                </TabsTrigger>
+                <TabsTrigger value="files" className="data-[state=active]:text-blue-600 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  Fichiers
                 </TabsTrigger>
                 <TabsTrigger value="org" className="data-[state=active]:text-purple-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
                   Organisation
@@ -307,6 +346,10 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                   </div>
                 )}
 
+                {activeTab === 'files' && (
+                  <AttachmentManager taskId={task.id} />
+                )}
+
                 {activeTab === 'org' && (
                   <div className="space-y-6">
                     <div className="space-y-3">
@@ -377,6 +420,12 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </Button>
           </div>
         </div>
+
+        <UnsplashPicker 
+          isOpen={isUnsplashOpen} 
+          onClose={() => setIsUnsplashOpen(false)} 
+          onSelect={(url) => onUpdate(task.id, { header_image: url })} 
+        />
       </DialogContent>
     </Dialog>
   );
