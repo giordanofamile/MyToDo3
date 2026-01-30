@@ -26,7 +26,7 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
       .eq('task_id', taskId)
       .order('created_at', { ascending: false });
     
-    if (error) showError(error.message);
+    if (error) console.error("Error fetching attachments:", error);
     else setAttachments(data || []);
   };
 
@@ -35,42 +35,46 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      showError("Vous devez être connecté pour ajouter des fichiers.");
+      showError("Session expirée. Veuillez vous reconnecter.");
       setUploading(false);
       return;
     }
 
-    const uploadPromises = Array.from(files).map(async (file) => {
+    const filesArray = Array.from(files);
+    let successCount = 0;
+
+    for (const file of filesArray) {
       try {
         let fileToUpload = file;
 
-        // 1. Compression si c'est une image
-        if (file.type.startsWith('image/')) {
+        // Compression pour les images > 500KB
+        if (file.type.startsWith('image/') && file.size > 500 * 1024) {
           const options = {
-            maxSizeMB: 0.5, // 500 KB
+            maxSizeMB: 0.4,
             maxWidthOrHeight: 1920,
             useWebWorker: true
           };
           fileToUpload = await imageCompression(file, options);
-        } else if (file.size > 500 * 1024) {
-          throw new Error(`Le fichier "${file.name}" dépasse la limite de 500 Ko`);
         }
 
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `${user.id}/${taskId}/${fileName}`;
 
-        // 2. Upload vers Supabase Storage (Bucket 'attachments')
-        const { error: uploadError } = await supabase.storage
+        // Upload vers Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('attachments')
           .upload(filePath, fileToUpload, {
             cacheControl: '3600',
             upsert: false
           });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Storage Upload Error:", uploadError);
+          throw new Error(`Erreur Storage: ${uploadError.message}`);
+        }
 
-        // 3. Enregistrement des métadonnées en base
+        // Enregistrement en base
         const { error: dbError } = await supabase
           .from('attachments')
           .insert([{
@@ -82,17 +86,18 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
             file_size: fileToUpload.size
           }]);
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error("Database Insert Error:", dbError);
+          // Nettoyage du fichier orphelin dans le storage
+          await supabase.storage.from('attachments').remove([filePath]);
+          throw new Error(`Erreur Base de données: ${dbError.message}`);
+        }
 
-        return true;
+        successCount++;
       } catch (error: any) {
         showError(error.message);
-        return false;
       }
-    });
-
-    const results = await Promise.all(uploadPromises);
-    const successCount = results.filter(Boolean).length;
+    }
 
     if (successCount > 0) {
       showSuccess(`${successCount} fichier(s) ajouté(s)`);
