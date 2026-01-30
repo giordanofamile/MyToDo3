@@ -15,10 +15,16 @@ const ICON_CATEGORIES: Record<string, string[]> = {
   'Travail': ['Briefcase', 'FileText', 'Presentation', 'Mail', 'Calendar', 'Clipboard', 'Database', 'HardDrive', 'Layers', 'Trello', 'PenTool', 'Printer', 'Send', 'Archive', 'BarChart', 'PieChart', 'LineChart', 'TrendingUp', 'Users', 'UserPlus', 'Building', 'Globe', 'Languages'],
   'Finance': ['Wallet', 'CreditCard', 'Banknote', 'Coins', 'PiggyBank', 'DollarSign', 'Euro', 'Bitcoin', 'Receipt', 'Calculator', 'ShoppingBag', 'ShoppingCart', 'Tag', 'Percent'],
   'Technologie': ['Laptop', 'Smartphone', 'Watch', 'Camera', 'Cpu', 'Monitor', 'Mouse', 'Wifi', 'Bluetooth', 'Code', 'Terminal', 'Server', 'Cloud', 'HardDrive', 'Usb', 'Battery', 'Speaker', 'Headphones', 'Mic'],
-  'Santé & Bien-être': ['Heart', 'Activity', 'Stethoscope', 'Thermometer', 'Pill', 'Dumbbell', 'Timer', 'Footprints', 'Apple', 'GlassWater', 'Coffee', 'Moon', 'Sun', 'Wind', 'Leaf'],
-  'Éducation': ['Book', 'BookOpen', 'GraduationCap', 'School', 'Library', 'Pencil', 'Eraser', 'Ruler', 'Compass', 'Brain', 'Lightbulb', 'Microscope', 'Telescope'],
-  'Médias': ['Play', 'Pause', 'SkipBack', 'SkipForward', 'Volume2', 'Music', 'Video', 'Image', 'Film', 'Mic', 'Radio', 'Tv', 'Cast', 'Airplay'],
-  'Nature & Voyage': ['TreePine', 'Flower', 'Bird', 'Fish', 'Mountain', 'Waves', 'Cloud', 'Sun', 'Moon', 'Stars', 'Compass', 'Map', 'MapPin', 'Plane', 'Car', 'Bike', 'Ship', 'Tent', 'Umbrella'],
+  'Sport': ['Dumbbell', 'Trophy', 'Medal', 'Target', 'Activity', 'Footprints', 'Bike', 'Timer', 'HeartPulse', 'Mountain', 'Waves', 'Wind'],
+  'Cuisine': ['Utensils', 'Coffee', 'Pizza', 'Apple', 'ChefHat', 'GlassWater', 'Wine', 'Beer', 'IceCream', 'Cookie', 'Soup', 'Flame'],
+  'Transport': ['Car', 'Bike', 'Plane', 'Ship', 'Train', 'Bus', 'TramFront', 'MapPin', 'Navigation', 'Compass', 'Anchor', 'Rocket'],
+  'Météo': ['Sun', 'Moon', 'Cloud', 'CloudRain', 'CloudLightning', 'Snowflake', 'Wind', 'Thermometer', 'Sunrise', 'Sunset', 'Umbrella', 'Rainbow'],
+  'Animaux': ['Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Snail', 'Bug', 'PawPrint', 'Turtle', 'Squirrel', 'Rat', 'Shrimp'],
+  'Shopping': ['ShoppingBag', 'ShoppingCart', 'Tag', 'CreditCard', 'Wallet', 'Receipt', 'Package', 'Store', 'Gift', 'Ticket', 'Barcode', 'Truck'],
+  'Musique': ['Music', 'Mic', 'Headphones', 'Speaker', 'Radio', 'Disc', 'Guitar', 'Piano', 'Volume2', 'Play', 'Pause', 'Repeat'],
+  'Jeux': ['Gamepad2', 'Dices', 'Puzzle', 'Ghost', 'Sword', 'Shield', 'Joystick', 'Trophy', 'Target', 'Zap', 'Crown', 'Gem'],
+  'Outils': ['Hammer', 'Wrench', 'Screwdriver', 'Pliers', 'Drill', 'Saw', 'Axe', 'Construction', 'HardHat', 'Lightbulb', 'Magnet', 'Scissors'],
+  'Social': ['Users', 'UserPlus', 'MessageSquare', 'Share2', 'Heart', 'ThumbsUp', 'AtSign', 'Globe', 'Smile', 'Frown', 'Announce', 'Phone'],
   'Maison': ['Home', 'Bed', 'Bath', 'Lamp', 'Sofa', 'Refrigerator', 'Microwave', 'Utensils', 'Coffee', 'Wine', 'Pizza', 'ChefHat'],
 };
 
@@ -34,6 +40,18 @@ const COLORS = [
 ];
 
 const UNSPLASH_CATEGORIES = ['Minimal', 'Nature', 'Abstract', 'Textures', 'Architecture', 'Workspace', 'Dark', 'Gradient'];
+
+// Liste d'IDs Unsplash réels pour garantir l'affichage
+const PHOTO_IDS: Record<string, string[]> = {
+  'Minimal': ['1494438639946-1ebd1d20bf85', '1507525428034-b723cf961d3e', '1483728642387-6c3bdd6c93e5', '1518005020250-675f0403172c', '1490730141103-6cac27aaab94', '1501785888041-af3ef285b470'],
+  'Nature': ['1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05', '1447752875215-b2761acb3c5d', '1464822759023-fed622ff2c3b', '1501854140801-50d01674950b', '1472214103451-9374bd1c798e'],
+  'Abstract': ['1550684848-fac1c5b4e853', '1541701494587-cb58502866ab', '1557683316-973673baf926', '1500462859279-500c0fc9280b', '1557682250-33bd709cbe85', '1557682224-5b8590cd9ec5'],
+  'Textures': ['1508739773434-c26b3d09e071', '1519751138087-5bf79df62d5b', '1505330622279-bf7d7fc918f4', '1518531933037-91b2f5f229cc', '1516541196182-6bdb0516ed27', '1515549832467-8c441b621112'],
+  'Architecture': ['1486406146926-c627a92ad1ab', '1449156003044-d74370a65f05', '1470723710355-95304d8aece4', '1511818966892-d7d671e672a2', '1487958449043-22212d898382', '1493397212122-2b85ddaed10e'],
+  'Workspace': ['1499750310107-5fef28a66643', '1497215728101-856f4ea42174', '1524758631624-e2822e304c36', '1504384308090-c894fdcc538d', '1486312338219-ce68d2c6f44d', '1519389950473-47ba0277781c'],
+  'Dark': ['1478760329108-5c3ed9d495a0', '1534796636912-3b95b39e62be', '1514810746112-6905c2141d3c', '1502134249126-9f3755a50d78', '1519681395007-3363395639f7', '1464802686167-b939a8ba0ca3'],
+  'Gradient': ['1557683311-44e5ba3c4b77', '1557683304-673a22e3f30f', '1557682260-35776cf021d1', '1557682257-d8d210ff98ee', '1557682254-c8348f623f79', '1557682224-5b8590cd9ec5'],
+};
 
 interface ListDialogProps {
   isOpen: boolean;
@@ -80,13 +98,11 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
     }
   }, [initialData, isOpen]);
 
-  const fetchImages = async (category: string) => {
+  const fetchImages = (category: string) => {
     setActiveCategory(category);
-    // Utilisation de l'API source.unsplash.com pour des images réelles et variées
-    const mockImages = Array.from({ length: 12 }, (_, i) => 
-      `https://images.unsplash.com/photo-${1500000000000 + (i * 1000000) + (category.length * 50000)}?auto=format&fit=crop&w=600&q=80`
-    );
-    setImages(mockImages);
+    const ids = PHOTO_IDS[category] || PHOTO_IDS['Minimal'];
+    const urls = ids.map(id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=600&q=80`);
+    setImages(urls);
   };
 
   useEffect(() => {
@@ -254,7 +270,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-3 gap-3">
                         {images.map((img, i) => (
                           <button
                             key={i}
@@ -267,7 +283,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                             <img src={img} alt="Unsplash" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                             {formData.bg_image === img && (
                               <div className="absolute inset-0 bg-[#3B82F6]/20 flex items-center justify-center">
-                                <Check className="w-8 h-8 text-white drop-shadow-md" />
+                                <Check className="w-6 h-6 text-white drop-shadow-md" />
                               </div>
                             )}
                           </button>
