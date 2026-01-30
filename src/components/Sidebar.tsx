@@ -13,7 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import ListDialog from './ListDialog';
 import ProfileDialog from './ProfileDialog';
-import { isPast, isToday, addDays, startOfDay, endOfDay } from 'date-fns';
 
 interface SidebarProps {
   activeList: string;
@@ -31,7 +30,11 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<any>(null);
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Éviter les problèmes d'hydratation pour le thème
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     fetchUser();
@@ -169,9 +172,18 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
           </div>
           <span className="font-bold text-xl tracking-tight dark:text-white">iTodo</span>
         </div>
-        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl">
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-yellow-500" /> : <Moon className="w-4 h-4 text-gray-500" />}
-        </button>
+        {mounted && (
+          <button 
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} 
+            className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-transform active:scale-90"
+          >
+            {resolvedTheme === 'dark' ? (
+              <Sun className="w-4 h-4 text-yellow-500" />
+            ) : (
+              <Moon className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
+        )}
       </div>
 
       <div className="relative mb-6">
