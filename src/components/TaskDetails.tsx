@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
 import { 
   Calendar as CalendarIcon, 
   Star, 
@@ -14,7 +17,12 @@ import {
   RefreshCw,
   Clock,
   AlertTriangle,
-  Archive
+  Archive,
+  Layout,
+  ListChecks,
+  Hash,
+  StickyNote,
+  ChevronRight
 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -25,6 +33,8 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import TagBadge from './TagBadge';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
 
 interface TaskDetailsProps {
   task: any;
@@ -38,6 +48,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
   const [newTag, setNewTag] = useState('');
+  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
     if (task?.id && isOpen) {
@@ -104,199 +115,264 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
     onUpdate(task.id, { tags: task.tags.filter((t: string) => t !== tagToRemove) });
   };
 
+  const completedSubtasks = subtasks.filter(s => s.is_completed).length;
+  const progress = subtasks.length > 0 ? (completedSubtasks / subtasks.length) * 100 : 0;
+
   if (!task) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-md border-l border-gray-200 bg-[#F5F5F7]/95 backdrop-blur-xl p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-6 bg-white/50 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl font-semibold">Détails</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <input
-                className="w-full text-lg font-medium bg-transparent border-none focus:ring-0 p-0"
-                value={task.title}
-                onChange={(e) => onUpdate(task.id, { title: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Priorité</label>
-                <Select 
-                  value={task.priority || 'medium'} 
-                  onValueChange={(val) => onUpdate(task.id, { priority: val })}
-                >
-                  <SelectTrigger className="rounded-xl bg-white border-gray-100 h-11">
-                    <AlertTriangle className={cn("w-4 h-4 mr-2", 
-                      task.priority === 'high' ? "text-red-500" : 
-                      task.priority === 'low' ? "text-blue-500" : "text-orange-500"
-                    )} />
-                    <SelectValue placeholder="Moyenne" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-none shadow-2xl">
-                    <SelectItem value="high">Haute</SelectItem>
-                    <SelectItem value="medium">Moyenne</SelectItem>
-                    <SelectItem value="low">Basse</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Récurrence</label>
-                <Select 
-                  value={task.recurrence || 'none'} 
-                  onValueChange={(val) => onUpdate(task.id, { recurrence: val })}
-                >
-                  <SelectTrigger className="rounded-xl bg-white border-gray-100 h-11">
-                    <RefreshCw className="w-4 h-4 mr-2 text-blue-500" />
-                    <SelectValue placeholder="Aucune" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-none shadow-2xl">
-                    <SelectItem value="none">Aucune</SelectItem>
-                    <SelectItem value="daily">Quotidien</SelectItem>
-                    <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                    <SelectItem value="monthly">Mensuel</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Estimation</label>
-              <Select 
-                value={task.estimated_minutes?.toString() || '0'} 
-                onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}
-              >
-                <SelectTrigger className="rounded-xl bg-white border-gray-100 h-11">
-                  <Clock className="w-4 h-4 mr-2 text-orange-500" />
-                  <SelectValue placeholder="0 min" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-none shadow-2xl">
-                  <SelectItem value="0">Aucune</SelectItem>
-                  <SelectItem value="5">5 min</SelectItem>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                  <SelectItem value="60">1 heure</SelectItem>
-                  <SelectItem value="120">2 heures</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">ÉTAPES</label>
-              <div className="space-y-2">
-                {subtasks.map((sub) => (
-                  <div key={sub.id} className="flex items-center gap-3 bg-white/50 p-3 rounded-xl group">
-                    <button onClick={() => toggleSubtask(sub)}>
-                      {sub.is_completed ? (
-                        <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-300" />
-                      )}
-                    </button>
-                    <span className={cn("flex-1 text-sm", sub.is_completed && "text-gray-400 line-through")}>
-                      {sub.title}
-                    </span>
-                    <button 
-                      onClick={() => deleteSubtask(sub.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-                <form onSubmit={addSubtask} className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 hover:border-blue-300 transition-colors">
-                  <Plus className="w-5 h-5 text-blue-500" />
-                  <input 
-                    placeholder="Ajouter une étape"
-                    className="bg-transparent border-none focus:ring-0 text-sm w-full"
-                    value={newSubtask}
-                    onChange={(e) => setNewSubtask(e.target.value)}
-                  />
-                </form>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">TAGS</label>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {task.tags?.map((tag: string) => (
-                  <TagBadge key={tag} tag={tag} onRemove={removeTag} />
-                ))}
-              </div>
-              <form onSubmit={addTag} className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 hover:border-blue-300 transition-colors">
-                <TagIcon className="w-4 h-4 text-gray-400" />
-                <input 
-                  placeholder="Ajouter un tag (Entrée)"
-                  className="bg-transparent border-none focus:ring-0 text-sm w-full"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl h-[90vh] sm:h-auto sm:max-h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-[#F8F9FA] dark:bg-[#1C1C1E]">
+        <div className="flex flex-col h-full">
+          {/* Header avec Titre et Progression */}
+          <div className="p-6 sm:p-8 bg-white dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex-1">
+                <input
+                  className="w-full text-2xl sm:text-3xl font-black bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300"
+                  value={task.title}
+                  onChange={(e) => onUpdate(task.id, { title: e.target.value })}
+                  placeholder="Titre de la tâche"
                 />
-              </form>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="h-1.5 flex-1 max-w-[200px] bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      className="h-full bg-blue-500"
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    {completedSubtasks}/{subtasks.length} Étapes
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "rounded-2xl h-12 w-12 transition-all",
+                    task.is_important ? "bg-pink-500/10 text-pink-500" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                  )}
+                  onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
+                >
+                  <Star className={cn("w-6 h-6", task.is_important && "fill-current")} />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-2xl h-12 w-12 text-gray-400">
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">ÉCHÉANCE</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal h-12 rounded-2xl bg-white border-gray-100 shadow-sm",
-                      !task.due_date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4 text-blue-500" />
-                    {task.due_date ? format(new Date(task.due_date), 'PPP', { locale: fr }) : "Ajouter une date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={task.due_date ? new Date(task.due_date) : undefined}
-                    onSelect={(date) => onUpdate(task.id, { due_date: date })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-4 sm:gap-8 overflow-x-auto no-scrollbar">
+                <TabsTrigger value="general" className="data-[state=active]:text-blue-500 data-[state=active]:bg-blue-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  <Layout className="w-4 h-4" /> Général
+                </TabsTrigger>
+                <TabsTrigger value="steps" className="data-[state=active]:text-orange-500 data-[state=active]:bg-orange-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  <ListChecks className="w-4 h-4" /> Étapes
+                </TabsTrigger>
+                <TabsTrigger value="org" className="data-[state=active]:text-purple-500 data-[state=active]:bg-purple-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  <Hash className="w-4 h-4" /> Organisation
+                </TabsTrigger>
+                <TabsTrigger value="notes" className="data-[state=active]:text-teal-500 data-[state=active]:bg-teal-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  <StickyNote className="w-4 h-4" /> Notes
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">NOTES</label>
-              <Textarea
-                placeholder="Ajouter une note..."
-                className="min-h-[120px] rounded-2xl bg-white border-gray-100 shadow-sm focus-visible:ring-blue-500 resize-none p-4"
-                value={task.notes || ''}
-                onChange={(e) => onUpdate(task.id, { notes: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start h-12 rounded-2xl transition-all",
-                  task.is_important ? "text-pink-500 bg-pink-50" : "text-gray-600 hover:bg-white"
-                )}
-                onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
+          {/* Content Area - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
               >
-                <Star className={cn("mr-2 h-4 w-4", task.is_important && "fill-pink-500")} />
-                {task.is_important ? "Marqué comme important" : "Marquer comme important"}
-              </Button>
+                {activeTab === 'general' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Priorité</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {['low', 'medium', 'high'].map((p) => (
+                            <button
+                              key={p}
+                              onClick={() => onUpdate(task.id, { priority: p })}
+                              className={cn(
+                                "h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                                task.priority === p 
+                                  ? p === 'high' ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20" 
+                                    : p === 'medium' ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20"
+                                    : "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20"
+                                  : "bg-white dark:bg-white/5 border-transparent text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10"
+                              )}
+                            >
+                              {p === 'low' ? 'Basse' : p === 'medium' ? 'Moyenne' : 'Haute'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Récurrence</Label>
+                        <Select value={task.recurrence || 'none'} onValueChange={(val) => onUpdate(task.id, { recurrence: val })}>
+                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-sm text-sm font-bold">
+                            <div className="flex items-center gap-3">
+                              <RefreshCw className="w-5 h-5 text-blue-500" />
+                              <SelectValue placeholder="Aucune" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-none shadow-2xl">
+                            <SelectItem value="none">Aucune</SelectItem>
+                            <SelectItem value="daily">Quotidien</SelectItem>
+                            <SelectItem value="weekly">Hebdomadaire</SelectItem>
+                            <SelectItem value="monthly">Mensuel</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
+                        <Select value={task.estimated_minutes?.toString() || '0'} onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}>
+                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-sm text-sm font-bold">
+                            <div className="flex items-center gap-3">
+                              <Clock className="w-5 h-5 text-orange-500" />
+                              <SelectValue placeholder="0 min" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-none shadow-2xl">
+                            <SelectItem value="0">Aucune</SelectItem>
+                            <SelectItem value="5">5 min</SelectItem>
+                            <SelectItem value="15">15 min</SelectItem>
+                            <SelectItem value="30">30 min</SelectItem>
+                            <SelectItem value="60">1 heure</SelectItem>
+                            <SelectItem value="120">2 heures</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-sm justify-start text-sm font-bold">
+                              <CalendarIcon className="mr-3 h-5 w-5 text-teal-500" />
+                              {task.due_date ? format(new Date(task.due_date), 'PPP', { locale: fr }) : "Ajouter une date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={task.due_date ? new Date(task.due_date) : undefined}
+                              onSelect={(date) => onUpdate(task.id, { due_date: date })}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'steps' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-3">
+                      {subtasks.map((sub) => (
+                        <motion.div 
+                          layout
+                          key={sub.id} 
+                          className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl group shadow-sm border border-transparent hover:border-orange-500/20 transition-all"
+                        >
+                          <button onClick={() => toggleSubtask(sub)} className="transition-transform active:scale-90">
+                            {sub.is_completed ? (
+                              <CheckCircle2 className="w-6 h-6 text-orange-500" />
+                            ) : (
+                              <Circle className="w-6 h-6 text-gray-300" />
+                            )}
+                          </button>
+                          <span className={cn("flex-1 text-sm font-medium", sub.is_completed && "text-gray-400 line-through")}>
+                            {sub.title}
+                          </span>
+                          <button 
+                            onClick={() => deleteSubtask(sub.id)}
+                            className="opacity-0 group-hover:opacity-100 p-2 text-gray-300 hover:text-red-500 transition-all"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </motion.div>
+                      ))}
+                      <form onSubmit={addSubtask} className="flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-orange-500/30 transition-all group">
+                        <div className="p-1 bg-orange-500/10 rounded-lg text-orange-500 group-hover:scale-110 transition-transform">
+                          <Plus className="w-5 h-5" />
+                        </div>
+                        <input 
+                          placeholder="Ajouter une étape..."
+                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-gray-400"
+                          value={newSubtask}
+                          onChange={(e) => setNewSubtask(e.target.value)}
+                        />
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'org' && (
+                  <div className="space-y-8">
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tags</Label>
+                      <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-white/5 rounded-[2rem] min-h-[100px] shadow-inner">
+                        {task.tags?.map((tag: string) => (
+                          <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-8 px-4 text-xs" />
+                        ))}
+                        {(!task.tags || task.tags.length === 0) && (
+                          <p className="text-gray-400 text-xs font-medium italic flex items-center gap-2">
+                            <TagIcon className="w-4 h-4" /> Aucun tag pour le moment
+                          </p>
+                        )}
+                      </div>
+                      <form onSubmit={addTag} className="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-white/5 shadow-sm">
+                        <TagIcon className="w-5 h-5 text-purple-500" />
+                        <input 
+                          placeholder="Nouveau tag (Entrée)"
+                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                        />
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'notes' && (
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Notes détaillées</Label>
+                    <Textarea
+                      placeholder="Écrivez vos pensées, liens ou détails ici..."
+                      className="min-h-[300px] rounded-[2rem] bg-white dark:bg-white/5 border-none shadow-sm focus-visible:ring-2 focus-visible:ring-teal-500/20 resize-none p-8 text-base leading-relaxed"
+                      value={task.notes || ''}
+                      onChange={(e) => onUpdate(task.id, { notes: e.target.value })}
+                    />
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Footer - Sticky */}
+          <div className="p-6 sm:p-8 bg-white dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start h-12 rounded-2xl transition-all",
-                  task.is_archived ? "text-indigo-500 bg-indigo-50" : "text-gray-600 hover:bg-white"
+                  "flex-1 sm:flex-none h-12 rounded-2xl px-6 font-bold transition-all",
+                  task.is_archived ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5"
                 )}
                 onClick={() => {
                   onUpdate(task.id, { is_archived: !task.is_archived });
@@ -305,24 +381,28 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 }}
               >
                 <Archive className="mr-2 h-4 w-4" />
-                {task.is_archived ? "Désarchiver la tâche" : "Archiver la tâche"}
+                {task.is_archived ? "Désarchiver" : "Archiver"}
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="flex-1 sm:flex-none h-12 rounded-2xl px-6 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                onClick={() => { onDelete(task.id); onClose(); }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Supprimer
               </Button>
             </div>
-          </div>
-
-          <div className="p-6 bg-white/50 border-t border-gray-200">
+            
             <Button 
-              variant="ghost" 
-              className="w-full text-red-500 hover:bg-red-50 hover:text-red-600 rounded-2xl h-12"
-              onClick={() => { onDelete(task.id); onClose(); }}
+              onClick={onClose}
+              className="w-full sm:w-auto h-14 rounded-2xl px-12 bg-black dark:bg-white text-white dark:text-black font-black text-lg shadow-xl hover:scale-105 transition-all active:scale-95"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Supprimer la tâche
+              Terminer
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 };
 
