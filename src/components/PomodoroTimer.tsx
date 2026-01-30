@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { showSuccess } from '@/utils/toast';
+import { useSettings } from '@/hooks/use-settings';
 
 interface PomodoroTimerProps {
   isOpen: boolean;
@@ -15,36 +16,49 @@ interface PomodoroTimerProps {
 
 const AMBIENCES = [
   { id: 'none', icon: VolumeX, label: 'Silence', url: '' },
-  { id: 'rain', icon: CloudRain, label: 'Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }, // Placeholder URLs
+  { id: 'rain', icon: CloudRain, label: 'Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
   { id: 'forest', icon: Trees, label: 'Forêt', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
   { id: 'cafe', icon: CoffeeIcon, label: 'Café', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
 ];
 
 const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
+  const { settings } = useSettings();
   const [mode, setMode] = useState<'work' | 'break'>('work');
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
   const [ambience, setAmbience] = useState('none');
   const [volume, setVolume] = useState([50]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const totalTime = mode === 'work' ? 25 * 60 : 5 * 60;
-  const progress = ((totalTime - timeLeft) / totalTime) * 100;
-
+  // Mettre à jour le temps quand les réglages changent ou que le mode change
   useEffect(() => {
-    if (ambience !== 'none' && isActive) {
-      // Note: In a real app, we would use high-quality loopable assets
-      // For now, we simulate the logic
-      console.log(`Playing ambience: ${ambience}`);
+    if (settings) {
+      const workTime = (settings.pomodoro_work_duration || 25) * 60;
+      const breakTime = (settings.pomodoro_short_break || 5) * 60;
+      if (!isActive) {
+        setTimeLeft(mode === 'work' ? workTime : breakTime);
+      }
     }
-  }, [ambience, isActive]);
+  }, [settings, mode, isActive]);
+
+  // Appliquer l'ambiance par défaut des réglages
+  useEffect(() => {
+    if (settings?.focus_default_ambience && ambience === 'none') {
+      setAmbience(settings.focus_default_ambience);
+    }
+  }, [settings]);
+
+  const totalTime = mode === 'work' 
+    ? (settings?.pomodoro_work_duration || 25) * 60 
+    : (settings?.pomodoro_short_break || 5) * 60;
+    
+  const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
   const saveFocusSession = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     await supabase.from('focus_sessions').insert([
-      { user_id: user.id, duration_minutes: 25 }
+      { user_id: user.id, duration_minutes: settings?.pomodoro_work_duration || 25 }
     ]);
     showSuccess("Session de focus enregistrée !");
   };
@@ -53,8 +67,10 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
 
   const resetTimer = useCallback(() => {
     setIsActive(false);
-    setTimeLeft(mode === 'work' ? 25 * 60 : 5 * 60);
-  }, [mode]);
+    const workTime = (settings?.pomodoro_work_duration || 25) * 60;
+    const breakTime = (settings?.pomodoro_short_break || 5) * 60;
+    setTimeLeft(mode === 'work' ? workTime : breakTime);
+  }, [mode, settings]);
 
   useEffect(() => {
     let interval: any = null;
@@ -67,12 +83,17 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
       if (mode === 'work') {
         saveFocusSession();
       }
+      
       const newMode = mode === 'work' ? 'break' : 'work';
       setMode(newMode);
-      setTimeLeft(newMode === 'work' ? 25 * 60 : 5 * 60);
+      
+      // Auto-start si activé dans les réglages
+      if (settings?.pomodoro_auto_start) {
+        setIsActive(true);
+      }
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, mode]);
+  }, [isActive, timeLeft, mode, settings]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

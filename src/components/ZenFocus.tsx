@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/hooks/use-settings';
 
 interface ZenFocusProps {
   task: any;
@@ -20,8 +21,11 @@ interface ZenFocusProps {
 }
 
 const ZenFocus = ({ task, onClose, onToggleComplete }: ZenFocusProps) => {
+  const { settings } = useSettings();
   const [step, setStep] = useState<'breathe' | 'focus'>('breathe');
   const [breathingState, setBreathingState] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+
+  const breathingDuration = (settings?.focus_breathing_duration || 4) * 1000;
 
   useEffect(() => {
     if (step === 'breathe') {
@@ -31,10 +35,10 @@ const ZenFocus = ({ task, onClose, onToggleComplete }: ZenFocusProps) => {
           if (prev === 'hold') return 'exhale';
           return 'inhale';
         });
-      }, 4000);
+      }, breathingDuration);
       return () => clearInterval(timer);
     }
-  }, [step]);
+  }, [step, breathingDuration]);
 
   const getBreathingText = () => {
     if (breathingState === 'inhale') return 'Inspirez...';
@@ -78,14 +82,14 @@ const ZenFocus = ({ task, onClose, onToggleComplete }: ZenFocusProps) => {
                   scale: breathingState === 'inhale' ? 1.5 : breathingState === 'hold' ? 1.5 : 1,
                   opacity: breathingState === 'inhale' ? 0.5 : 0.2
                 }}
-                transition={{ duration: 4, ease: "easeInOut" }}
+                transition={{ duration: breathingDuration / 1000, ease: "easeInOut" }}
                 className="absolute w-64 h-64 bg-blue-500 rounded-full blur-3xl"
               />
               <motion.div 
                 animate={{ 
                   scale: breathingState === 'inhale' ? 1.2 : breathingState === 'hold' ? 1.2 : 1
                 }}
-                transition={{ duration: 4, ease: "easeInOut" }}
+                transition={{ duration: breathingDuration / 1000, ease: "easeInOut" }}
                 className="relative w-48 h-48 border-4 border-blue-500/30 rounded-full flex items-center justify-center"
               >
                 <Wind className="w-12 h-12 text-blue-500" />
