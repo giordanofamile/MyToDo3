@@ -31,7 +31,6 @@ const ICON_CATEGORIES: Record<string, string[]> = {
   'Sécurité': ['Shield', 'Lock', 'Unlock', 'Key', 'Eye', 'EyeOff', 'Fingerprint', 'ShieldCheck', 'ShieldAlert', 'FileLock', 'HardDrive']
 };
 
-// Dictionnaire de traduction pour la recherche en français
 const ICON_TRANSLATIONS: Record<string, string[]> = {
   'travail': ['work', 'briefcase', 'file', 'presentation', 'mail', 'calendar', 'clipboard', 'archive'],
   'argent': ['finance', 'bank', 'wallet', 'credit', 'coins', 'dollar', 'euro', 'receipt'],
@@ -133,7 +132,9 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
     if (isOpen) fetchImages('minimal');
   }, [isOpen]);
 
-  const handleSave = () => {
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!formData.name.trim()) return;
     onSave(formData);
     onClose();
@@ -141,17 +142,11 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
 
   const filteredIcons = Object.entries(ICON_CATEGORIES).reduce((acc, [category, icons]) => {
     const searchLower = iconSearch.toLowerCase();
-    
-    // Récupère les termes anglais associés si la recherche est en français
     const translatedTerms = ICON_TRANSLATIONS[searchLower] || [];
-    
     const filtered = icons.filter(icon => {
       const iconLower = icon.toLowerCase();
-      // Vérifie si le nom de l'icône contient la recherche ou un des termes traduits
-      return iconLower.includes(searchLower) || 
-             translatedTerms.some(term => iconLower.includes(term));
+      return iconLower.includes(searchLower) || translatedTerms.some(term => iconLower.includes(term));
     });
-    
     if (filtered.length > 0) acc[category] = filtered;
     return acc;
   }, {} as Record<string, string[]>);
@@ -166,24 +161,9 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
           
           <Tabs defaultValue="general" className="w-full">
             <TabsList className="w-full justify-start bg-transparent border-none h-auto p-0 mb-8 gap-8">
-              <TabsTrigger 
-                value="general" 
-                className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8] transition-colors"
-              >
-                GÉNÉRAL
-              </TabsTrigger>
-              <TabsTrigger 
-                value="appearance" 
-                className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8] transition-colors"
-              >
-                APPARENCE
-              </TabsTrigger>
-              <TabsTrigger 
-                value="background" 
-                className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8] transition-colors"
-              >
-                IMMERSION
-              </TabsTrigger>
+              <TabsTrigger value="general" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">GÉNÉRAL</TabsTrigger>
+              <TabsTrigger value="appearance" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">APPARENCE</TabsTrigger>
+              <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
             <div className="h-[420px]">
@@ -218,7 +198,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                     onChange={(e) => setIconSearch(e.target.value)}
                   />
                 </div>
-                
                 <ScrollArea className="flex-1 pr-4 custom-scrollbar">
                   <div className="space-y-8 pb-4">
                     {Object.entries(filteredIcons).map(([category, icons]) => (
@@ -233,9 +212,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                                 onClick={() => setFormData({ ...formData, icon: iconName })}
                                 className={cn(
                                   "flex items-center justify-center h-14 rounded-2xl transition-all",
-                                  formData.icon === iconName 
-                                    ? "bg-white dark:bg-white/10 shadow-lg scale-105 ring-2 ring-[#3B82F6]/20" 
-                                    : "hover:bg-white/50 dark:hover:bg-white/5 text-[#94A3B8]"
+                                  formData.icon === iconName ? "bg-white dark:bg-white/10 shadow-lg scale-105 ring-2 ring-[#3B82F6]/20" : "hover:bg-white/50 dark:hover:bg-white/5 text-[#94A3B8]"
                                 )}
                               >
                                 {Icon && <Icon className={cn("w-6 h-6", formData.icon === iconName && formData.color)} />}
@@ -247,7 +224,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                     ))}
                   </div>
                 </ScrollArea>
-
                 <div className="pt-4 border-t border-[#E2E8F0] dark:border-white/5">
                   <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                     {COLORS.map((color) => (
@@ -268,7 +244,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               <TabsContent value="background" className="mt-0 h-full">
                 <ScrollArea className="h-full pr-4 custom-scrollbar">
                   <div className="space-y-8 pb-6">
-                    {/* Couleur de fond placée en haut */}
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">COULEUR DE FOND</Label>
                       <div className="grid grid-cols-4 gap-3">
@@ -294,24 +269,13 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                         </button>
                       </div>
                     </div>
-
-                    {/* Image Unsplash placée en dessous */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">IMAGE UNSPLASH</Label>
-                      </div>
+                      <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">IMAGE UNSPLASH</Label>
                       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                         {UNSPLASH_CATEGORIES.map(cat => (
-                          <button 
-                            key={cat}
-                            onClick={() => fetchImages(cat)}
-                            className="px-3 py-1.5 rounded-full bg-white dark:bg-white/5 text-[9px] font-bold whitespace-nowrap text-[#64748B] hover:text-[#3B82F6] transition-colors border border-[#E2E8F0] dark:border-white/5"
-                          >
-                            {cat}
-                          </button>
+                          <button key={cat} onClick={() => fetchImages(cat)} className="px-3 py-1.5 rounded-full bg-white dark:bg-white/5 text-[9px] font-bold whitespace-nowrap text-[#64748B] hover:text-[#3B82F6] transition-colors border border-[#E2E8F0] dark:border-white/5">{cat}</button>
                         ))}
                       </div>
-
                       <div className="grid grid-cols-3 gap-3">
                         {images.map((img, i) => (
                           <button
@@ -323,7 +287,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                             )}
                           >
                             <img src={img} alt="Unsplash" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </button>
                         ))}
                       </div>
