@@ -10,6 +10,8 @@ import CalendarView from '@/components/CalendarView';
 import KanbanView from '@/components/KanbanView';
 import GridView from '@/components/GridView';
 import TimelineView from '@/components/TimelineView';
+import GanttView from '@/components/GanttView';
+import ReportsView from '@/components/ReportsView';
 import ViewSwitcher, { ViewType } from '@/components/ViewSwitcher';
 import ZenFocus from '@/components/ZenFocus';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -147,6 +149,10 @@ const Index = () => {
                   <GridView tasks={tasks} onTaskClick={setSelectedTask} onToggleComplete={(id, completed) => updateTask(id, { is_completed: completed })} />
                 ) : viewType === 'timeline' ? (
                   <TimelineView tasks={tasks} onTaskClick={setSelectedTask} />
+                ) : viewType === 'gantt' ? (
+                  <GanttView tasks={tasks} onTaskClick={setSelectedTask} />
+                ) : viewType === 'reports' ? (
+                  <ReportsView tasks={tasks} />
                 ) : (
                   <div className="space-y-3 max-w-4xl mx-auto">
                     {tasks.map((task) => (
