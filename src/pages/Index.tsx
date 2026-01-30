@@ -16,9 +16,11 @@ import ViewSwitcher, { ViewType } from '@/components/ViewSwitcher';
 import ZenFocus from '@/components/ZenFocus';
 import ShortcutsModal from '@/components/ShortcutsModal';
 import QuickTaskBar from '@/components/QuickTaskBar';
+import EmptyState from '@/components/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Zap } from 'lucide-react';
+import { Timer, Zap, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -102,7 +104,6 @@ const Index = () => {
     if (activeList === 'dashboard') return;
     setLoading(true);
     
-    // On récupère les tâches avec le compte des sous-tâches
     let query = supabase
       .from('tasks')
       .select(`
@@ -111,9 +112,8 @@ const Index = () => {
       `)
       .eq('is_archived', false);
     
-    if (!settings?.tasks_show_completed) {
-      query = query.eq('is_completed', false);
-    }
+    // On ne filtre pas les complétées ici pour pouvoir calculer la progression
+    // mais on respecte le réglage utilisateur pour l'affichage final
 
     if (activeList === 'important') query = query.eq('is_important', true);
     else if (activeList === 'planned') query = query.not('due_date', 'is', null);
@@ -124,7 +124,6 @@ const Index = () => {
     
     if (error) showError(error.message);
     else {
-      // On formate les données pour extraire le count
       const formattedTasks = data?.map(t => ({
         ...t,
         subtask_count: t.subtasks?.[0]?.count || 0
@@ -174,6 +173,19 @@ const Index = () => {
     }
   };
 
+  // Filtrage intelligent
+  const filteredTasks = tasks.filter(t => {
+    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCompletion = settings?.tasks_show_completed ? true : !t.is_completed;
+    return matchesSearch && matchesCompletion;
+  });
+
+  // Calcul de progression
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.is_completed).length;
+  const listProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
   const currentList = customLists.find(l => l.id === activeList);
 
   if (!session) return <Auth />;
@@ -205,11 +217,25 @@ const Index = () => {
             settings?.compact_mode && "px-4 sm:px-6 pt-4"
           )}>
             <header className={cn("mb-8 flex-none", settings?.compact_mode && "mb-4")}>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex-1">
                   <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
                     {currentList?.name || (activeList === 'my-day' ? 'Ma journée' : activeList === 'important' ? 'Important' : activeList === 'planned' ? 'Planifié' : 'Tâches')}
                   </h1>
+                  {totalTasks > 0 && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="h-1.5 flex-1 max-w-[200px] bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${listProgress}%` }}
+                          className="h-full bg-blue-500"
+                        />
+                      </div>
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        {completedTasks}/{totalTasks} Faits
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3">
                   <ViewSwitcher currentView={viewType} onViewChange={handleViewChange} />
@@ -226,7 +252,7 @@ const Index = () => {
             <div className="flex-1 w-full h-full min-0">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`${activeList}-${viewType}`}
+                  key={`${activeList}-${viewType}-${searchQuery}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -236,30 +262,38 @@ const Index = () => {
                   {viewType === 'dashboard' ? (
                     <Dashboard onClose={() => setViewType('list')} />
                   ) : viewType === 'calendar' ? (
-                    <CalendarView tasks={tasks} onTaskClick={setSelectedTask} />
+                    <CalendarView tasks={filteredTasks} onTaskClick={setSelectedTask} />
                   ) : viewType === 'kanban' ? (
-                    <KanbanView tasks={tasks} onTaskClick={setSelectedTask} onUpdateTask={updateTask} />
+                    <KanbanView tasks={filteredTasks} onTaskClick={setSelectedTask} onUpdateTask={updateTask} />
                   ) : viewType === 'grid' ? (
-                    <GridView tasks={tasks} onTaskClick={setSelectedTask} onToggleComplete={(id, completed) => updateTask(id, { is_completed: completed })} />
+                    <GridView tasks={filteredTasks} onTaskClick={setSelectedTask} onToggleComplete={(id, completed) => updateTask(id, { is_completed: completed })} />
                   ) : viewType === 'timeline' ? (
-                    <TimelineView tasks={tasks} onTaskClick={setSelectedTask} />
+                    <TimelineView tasks={filteredTasks} onTaskClick={setSelectedTask} />
                   ) : viewType === 'gantt' ? (
-                    <GanttView tasks={tasks} onTaskClick={setSelectedTask} />
+                    <GanttView tasks={filteredTasks} onTaskClick={setSelectedTask} />
                   ) : viewType === 'reports' ? (
                     <ReportsView tasks={tasks} />
                   ) : (
                     <div className={cn("space-y-3 w-full", settings?.compact_mode && "space-y-1.5")}>
-                      {tasks.map((task) => (
-                        <TaskItem 
-                          key={task.id} 
-                          task={task} 
-                          onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })} 
-                          onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })} 
-                          onDelete={() => {}} 
-                          onClick={setSelectedTask} 
-                          compact={settings?.compact_mode}
+                      {filteredTasks.length > 0 ? (
+                        filteredTasks.map((task) => (
+                          <TaskItem 
+                            key={task.id} 
+                            task={task} 
+                            onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })} 
+                            onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })} 
+                            onDelete={() => {}} 
+                            onClick={setSelectedTask} 
+                            compact={settings?.compact_mode}
+                          />
+                        ))
+                      ) : (
+                        <EmptyState 
+                          type={searchQuery ? 'no-search' : totalTasks > 0 ? 'all-done' : 'no-tasks'}
+                          title={searchQuery ? 'Aucun résultat' : totalTasks > 0 ? 'Tout est fait !' : 'Liste vide'}
+                          description={searchQuery ? `Aucune tâche ne correspond à "${searchQuery}"` : totalTasks > 0 ? 'Vous avez terminé toutes les tâches de cette liste.' : 'Commencez par ajouter une tâche ci-dessous.'}
                         />
-                      ))}
+                      )}
                     </div>
                   )}
                 </motion.div>
