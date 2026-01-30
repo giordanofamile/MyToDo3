@@ -118,95 +118,95 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] md:max-w-4xl lg:max-w-5xl h-[90vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-[#F8F9FA] dark:bg-[#1C1C1E]">
+      <DialogContent className="max-w-[95vw] md:max-w-3xl h-[80vh] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E]">
         <div className="flex flex-col h-full w-full overflow-hidden">
-          {/* Header - Fixed Height */}
-          <div className="flex-none p-6 sm:p-8 bg-white dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          {/* Header - Compact */}
+          <div className="flex-none p-5 sm:p-6 border-b border-gray-100 dark:border-white/5">
+            <div className="flex items-center justify-between gap-4 mb-4">
               <div className="flex-1">
                 <input
-                  className="w-full text-2xl sm:text-3xl font-black bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300 outline-none"
+                  className="w-full text-xl sm:text-2xl font-black bg-transparent border-none focus:ring-0 p-0 dark:text-white placeholder:text-gray-300 outline-none"
                   value={task.title}
                   onChange={(e) => onUpdate(task.id, { title: e.target.value })}
                   placeholder="Titre de la tâche"
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="h-1.5 flex-1 max-w-[200px] bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="h-1 flex-1 max-w-[150px] bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       className="h-full bg-blue-500"
                     />
                   </div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                     {completedSubtasks}/{subtasks.length} Étapes
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "rounded-2xl h-12 w-12 transition-all",
-                    task.is_important ? "bg-pink-500/10 text-pink-500" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                    "rounded-xl h-10 w-10 transition-all",
+                    task.is_important ? "text-pink-500" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
                   )}
                   onClick={() => onUpdate(task.id, { is_important: !task.is_important })}
                 >
-                  <Star className={cn("w-6 h-6", task.is_important && "fill-current")} />
+                  <Star className={cn("w-5 h-5", task.is_important && "fill-current")} />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-2xl h-12 w-12 text-gray-400">
-                  <X className="w-6 h-6" />
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl h-10 w-10 text-gray-400">
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-4 sm:gap-8 overflow-x-auto no-scrollbar">
-                <TabsTrigger value="general" className="data-[state=active]:text-blue-500 data-[state=active]:bg-blue-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  <Layout className="w-4 h-4" /> Général
+              <TabsList className="w-full justify-start bg-transparent h-auto p-0 gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
+                <TabsTrigger value="general" className="data-[state=active]:text-blue-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  Général
                 </TabsTrigger>
-                <TabsTrigger value="steps" className="data-[state=active]:text-orange-500 data-[state=active]:bg-orange-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  <ListChecks className="w-4 h-4" /> Étapes
+                <TabsTrigger value="steps" className="data-[state=active]:text-orange-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  Étapes
                 </TabsTrigger>
-                <TabsTrigger value="org" className="data-[state=active]:text-purple-500 data-[state=active]:bg-purple-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> Organisation
+                <TabsTrigger value="org" className="data-[state=active]:text-purple-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  Organisation
                 </TabsTrigger>
-                <TabsTrigger value="notes" className="data-[state=active]:text-teal-500 data-[state=active]:bg-teal-500/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
-                  <StickyNote className="w-4 h-4" /> Notes
+                <TabsTrigger value="notes" className="data-[state=active]:text-teal-500 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-teal-500 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 transition-all flex items-center gap-2">
+                  Notes
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-          {/* Content Area - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-transparent">
+          {/* Content Area - Compact & Borderless */}
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
                 className="w-full"
               >
                 {activeTab === 'general' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Priorité</Label>
-                        <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Priorité</Label>
+                        <div className="flex gap-1">
                           {['low', 'medium', 'high'].map((p) => (
                             <button
                               key={p}
                               onClick={() => onUpdate(task.id, { priority: p })}
                               className={cn(
-                                "h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                "flex-1 h-9 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
                                 task.priority === p 
-                                  ? p === 'high' ? "bg-red-500 text-white shadow-lg shadow-red-500/20" 
-                                    : p === 'medium' ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
-                                  : "bg-white dark:bg-white/5 text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10"
+                                  ? p === 'high' ? "bg-red-500 text-white" 
+                                    : p === 'medium' ? "bg-orange-500 text-white"
+                                    : "bg-blue-500 text-white"
+                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                               )}
                             >
                               {p === 'low' ? 'Basse' : p === 'medium' ? 'Moyenne' : 'Haute'}
@@ -215,16 +215,16 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                         </div>
                       </div>
 
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Récurrence</Label>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Récurrence</Label>
                         <Select value={task.recurrence || 'none'} onValueChange={(val) => onUpdate(task.id, { recurrence: val })}>
-                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-none text-sm font-bold focus:ring-0">
-                            <div className="flex items-center gap-3">
-                              <RefreshCw className="w-5 h-5 text-blue-500" />
+                          <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                            <div className="flex items-center gap-2">
+                              <RefreshCw className="w-4 h-4 text-blue-500" />
                               <SelectValue placeholder="Aucune" />
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-none shadow-2xl">
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
                             <SelectItem value="none">Aucune</SelectItem>
                             <SelectItem value="daily">Quotidien</SelectItem>
                             <SelectItem value="weekly">Hebdomadaire</SelectItem>
@@ -234,37 +234,36 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                       </div>
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Estimation</Label>
                         <Select value={task.estimated_minutes?.toString() || '0'} onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}>
-                          <SelectTrigger className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-none text-sm font-bold focus:ring-0">
-                            <div className="flex items-center gap-3">
-                              <Clock className="w-5 h-5 text-orange-500" />
+                          <SelectTrigger className="h-10 rounded-none bg-transparent border-none shadow-none text-sm font-bold focus:ring-0 p-0">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-orange-500" />
                               <SelectValue placeholder="0 min" />
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-none shadow-2xl">
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
                             <SelectItem value="0">Aucune</SelectItem>
                             <SelectItem value="5">5 min</SelectItem>
                             <SelectItem value="15">15 min</SelectItem>
                             <SelectItem value="30">30 min</SelectItem>
                             <SelectItem value="60">1 heure</SelectItem>
-                            <SelectItem value="120">2 heures</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Échéance</Label>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant="ghost" className="w-full h-14 rounded-2xl bg-white dark:bg-white/5 border-none shadow-none justify-start text-sm font-bold hover:bg-white/80 dark:hover:bg-white/10">
-                              <CalendarIcon className="mr-3 h-5 w-5 text-teal-500" />
-                              {task.due_date ? format(new Date(task.due_date), 'PPP', { locale: fr }) : "Ajouter une date"}
+                            <Button variant="ghost" className="w-full h-10 rounded-none bg-transparent border-none shadow-none justify-start text-sm font-bold p-0 hover:bg-transparent">
+                              <CalendarIcon className="mr-2 h-4 w-4 text-teal-500" />
+                              {task.due_date ? format(new Date(task.due_date), 'd MMM yyyy', { locale: fr }) : "Ajouter une date"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none" align="start">
+                          <PopoverContent className="w-auto p-0 rounded-xl shadow-2xl border-none" align="start">
                             <Calendar
                               mode="single"
                               selected={task.due_date ? new Date(task.due_date) : undefined}
@@ -279,39 +278,30 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 )}
 
                 {activeTab === 'steps' && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-1">
                       {subtasks.map((sub) => (
-                        <motion.div 
-                          layout
-                          key={sub.id} 
-                          className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl group border-none transition-all shadow-sm"
-                        >
+                        <div key={sub.id} className="flex items-center gap-3 py-2 group">
                           <button onClick={() => toggleSubtask(sub)} className="transition-transform active:scale-90">
                             {sub.is_completed ? (
-                              <CheckCircle2 className="w-6 h-6 text-orange-500" />
+                              <CheckCircle2 className="w-5 h-5 text-orange-500" />
                             ) : (
-                              <Circle className="w-6 h-6 text-gray-300" />
+                              <Circle className="w-5 h-5 text-gray-300" />
                             )}
                           </button>
                           <span className={cn("flex-1 text-sm font-medium", sub.is_completed && "text-gray-400 line-through")}>
                             {sub.title}
                           </span>
-                          <button 
-                            onClick={() => deleteSubtask(sub.id)}
-                            className="opacity-0 group-hover:opacity-100 p-2 text-gray-300 hover:text-red-500 transition-all"
-                          >
-                            <X className="w-4 h-4" />
+                          <button onClick={() => deleteSubtask(sub.id)} className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500">
+                            <X className="w-3 h-3" />
                           </button>
-                        </motion.div>
-                      ))}
-                      <form onSubmit={addSubtask} className="flex items-center gap-4 p-4 rounded-2xl bg-white/50 dark:bg-white/5 transition-all group">
-                        <div className="p-1 bg-orange-500/10 rounded-lg text-orange-500 group-hover:scale-110 transition-transform">
-                          <Plus className="w-5 h-5" />
                         </div>
+                      ))}
+                      <form onSubmit={addSubtask} className="flex items-center gap-3 py-2">
+                        <Plus className="w-4 h-4 text-orange-500" />
                         <input 
                           placeholder="Ajouter une étape..."
-                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-gray-400 outline-none"
+                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-gray-400 outline-none p-0"
                           value={newSubtask}
                           onChange={(e) => setNewSubtask(e.target.value)}
                         />
@@ -321,24 +311,19 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 )}
 
                 {activeTab === 'org' && (
-                  <div className="space-y-8">
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tags</Label>
-                      <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-white/5 rounded-[2rem] min-h-[100px] shadow-sm">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tags</Label>
+                      <div className="flex flex-wrap gap-1.5">
                         {task.tags?.map((tag: string) => (
-                          <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-8 px-4 text-xs" />
+                          <TagBadge key={tag} tag={tag} onRemove={removeTag} className="h-6 px-2 text-[9px]" />
                         ))}
-                        {(!task.tags || task.tags.length === 0) && (
-                          <p className="text-gray-400 text-xs font-medium italic flex items-center gap-2">
-                            <TagIcon className="w-4 h-4" /> Aucun tag pour le moment
-                          </p>
-                        )}
                       </div>
-                      <form onSubmit={addTag} className="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-white/5 shadow-sm">
-                        <TagIcon className="w-5 h-5 text-purple-500" />
+                      <form onSubmit={addTag} className="flex items-center gap-2 py-2 border-b border-gray-100 dark:border-white/5">
+                        <TagIcon className="w-4 h-4 text-purple-500" />
                         <input 
-                          placeholder="Nouveau tag (Entrée)"
-                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full outline-none"
+                          placeholder="Nouveau tag..."
+                          className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full outline-none p-0"
                           value={newTag}
                           onChange={(e) => setNewTag(e.target.value)}
                         />
@@ -348,11 +333,10 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 )}
 
                 {activeTab === 'notes' && (
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Notes détaillées</Label>
+                  <div className="h-full">
                     <Textarea
-                      placeholder="Écrivez vos pensées, liens ou détails ici..."
-                      className="min-h-[300px] rounded-[2rem] bg-white dark:bg-white/5 border-none shadow-sm focus-visible:ring-0 resize-none p-8 text-base leading-relaxed outline-none"
+                      placeholder="Notes..."
+                      className="min-h-[200px] rounded-none bg-transparent border-none shadow-none focus-visible:ring-0 resize-none p-0 text-sm leading-relaxed outline-none"
                       value={task.notes || ''}
                       onChange={(e) => onUpdate(task.id, { notes: e.target.value })}
                     />
@@ -362,27 +346,25 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </AnimatePresence>
           </div>
 
-          {/* Footer - Fixed Height, Always Visible */}
-          <div className="flex-none p-6 sm:p-8 bg-white dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Footer - Compact */}
+          <div className="flex-none p-5 sm:p-6 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
-                className={cn(
-                  "flex-1 sm:flex-none h-12 rounded-2xl px-6 font-bold transition-all",
-                  task.is_archived ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5"
-                )}
+                size="sm"
+                className="h-9 rounded-xl text-gray-400 hover:text-indigo-500"
                 onClick={() => {
                   onUpdate(task.id, { is_archived: !task.is_archived });
                   onClose();
-                  showSuccess(task.is_archived ? "Tâche désarchivée" : "Tâche archivée");
                 }}
               >
                 <Archive className="mr-2 h-4 w-4" />
-                {task.is_archived ? "Désarchiver" : "Archiver"}
+                Archiver
               </Button>
               <Button 
                 variant="ghost" 
-                className="flex-1 sm:flex-none h-12 rounded-2xl px-6 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                size="sm"
+                className="h-9 rounded-xl text-gray-400 hover:text-red-500"
                 onClick={() => { onDelete(task.id); onClose(); }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -392,7 +374,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             
             <Button 
               onClick={onClose}
-              className="w-full sm:w-auto h-14 rounded-2xl px-12 bg-black dark:bg-white text-white dark:text-black font-black text-lg shadow-xl hover:scale-105 transition-all active:scale-95"
+              className="h-10 rounded-xl px-6 bg-black dark:bg-white text-white dark:text-black font-bold text-sm shadow-lg"
             >
               Terminer
             </Button>

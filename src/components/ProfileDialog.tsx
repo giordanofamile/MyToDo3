@@ -62,43 +62,43 @@ const ProfileDialog = ({ isOpen, onClose, onUpdate }: ProfileDialogProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] border-none shadow-2xl bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl">
+      <DialogContent className="sm:max-w-[350px] rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1C1E] p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">Mon Profil</DialogTitle>
+          <DialogTitle className="text-xl font-black text-center mb-4">Mon Profil</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-2">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-3xl bg-blue-500/10 flex items-center justify-center">
-              <User className="w-10 h-10 text-blue-500" />
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+              <User className="w-8 h-8 text-blue-500" />
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-400 ml-1">Prénom</Label>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-1">Prénom</Label>
               <Input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="h-12 rounded-xl bg-gray-100 dark:bg-white/5 border-none focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                className="h-9 rounded-none bg-transparent border-none focus-visible:ring-0 p-0 font-semibold"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-400 ml-1">Nom</Label>
+            <div className="space-y-1">
+              <Label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-1">Nom</Label>
               <Input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="h-12 rounded-xl bg-gray-100 dark:bg-white/5 border-none focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                className="h-9 rounded-none bg-transparent border-none focus-visible:ring-0 p-0 font-semibold"
               />
             </div>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="mt-6">
           <Button 
             onClick={handleSave}
             disabled={loading}
-            className="w-full h-12 bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-xl font-bold transition-all"
+            className="w-full h-11 bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-xl font-bold transition-all shadow-lg"
           >
             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
