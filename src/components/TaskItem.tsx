@@ -6,7 +6,8 @@ import {
   Star, 
   Calendar, 
   AlignLeft,
-  Clock
+  Clock,
+  GripVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -24,26 +25,45 @@ interface TaskItemProps {
 const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskItemProps) => {
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.is_completed;
 
+  const onDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('id', task.id);
+    e.dataTransfer.setData('type', 'task');
+    e.dataTransfer.effectAllowed = 'move';
+    
+    const dragImage = document.createElement('div');
+    dragImage.className = "bg-blue-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-2xl";
+    dragImage.innerText = task.title;
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
+  };
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
+      draggable
+      onDragStart={onDragStart as any}
       className={cn(
-        "group flex items-center gap-4 rounded-xl transition-all cursor-pointer",
+        "group flex items-center gap-4 rounded-xl transition-all cursor-pointer relative",
         "bg-white dark:bg-[#2C2C2E] border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md",
         compact ? "p-2 gap-3" : "p-3.5 gap-4",
         task.is_completed && "opacity-60 grayscale-[0.5]"
       )}
       onClick={() => onClick(task)}
     >
+      <div className="absolute left-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+        <GripVertical className="w-3 h-3 text-gray-300" />
+      </div>
+
       <button
         onClick={(e) => {
           e.stopPropagation();
           onToggle(task);
         }}
-        className="flex-none transition-transform active:scale-90"
+        className="flex-none transition-transform active:scale-90 ml-2"
       >
         {task.is_completed ? (
           <CheckCircle2 className={cn("text-blue-500", compact ? "w-4 h-4" : "w-5 h-5")} />

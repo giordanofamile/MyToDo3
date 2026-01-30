@@ -47,6 +47,15 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Écouteur pour le Drag & Drop depuis la sidebar
+  useEffect(() => {
+    const handleTaskMoved = () => {
+      fetchTasks();
+    };
+    window.addEventListener('task-moved', handleTaskMoved);
+    return () => window.removeEventListener('task-moved', handleTaskMoved);
+  }, [activeList]);
+
   // Raccourcis Clavier Globaux
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,7 +64,6 @@ const Index = () => {
       switch (e.key.toLowerCase()) {
         case 'n':
           e.preventDefault();
-          // Focus sur l'input de la barre rapide si possible
           const quickInput = document.querySelector('input[placeholder="Ajouter une tâche..."]') as HTMLInputElement;
           quickInput?.focus();
           break;
@@ -246,7 +254,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Barre de saisie rapide en pleine largeur */}
         {!['dashboard', 'reports'].includes(activeList) && (
           <QuickTaskBar onAdd={createNewTask} activeList={activeList} />
         )}

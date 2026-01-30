@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Sun, Star, Calendar, Hash, Plus, LogOut, Search, Moon, Trash2, 
   Settings2, BarChart3, CalendarDays, ChevronRight, ChevronDown,
-  FolderPlus, Settings
+  FolderPlus, Settings, GripVertical
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<any>(null);
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -88,15 +89,50 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
     setEditingList(null);
   };
 
-  const handleDeleteList = async (id: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer cette liste et toutes ses tâches ?")) return;
-    
-    const { error } = await supabase.from('lists').delete().eq('id', id);
-    if (error) showError(error.message);
-    else {
-      onListsUpdate();
-      if (activeList === id) setActiveList('my-day');
-      showSuccess("Liste supprimée");
+  // --- Logique Drag & Drop ---
+  const onDragStart = (e: React.DragEvent, id: string, type: 'list' | 'task') => {
+    e.dataTransfer.setData('id', id);
+    e.dataTransfer.setData('type', type);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    setDragOverId(id);
+  };
+
+  const onDrop = async (e: React.DragEvent, targetListId: string) => {
+    e.preventDefault();
+    setDragOverId(null);
+    const id = e.dataTransfer.getData('id');
+    const type = e.dataTransfer.getData('type');
+
+    if (id === targetListId) return;
+
+    try {
+      if (type === 'list') {
+        // Déplacer une liste dans une autre (hiérarchie)
+        const { error } = await supabase
+          .from('lists')
+          .update({ parent_id: targetListId })
+          .eq('id', id);
+        if (error) throw error;
+        showSuccess("Hiérarchie mise à jour");
+        onListsUpdate();
+      } else if (type === 'task') {
+        // Déplacer une tâche dans une liste
+        const { error } = await supabase
+          .from('tasks')
+          .update({ list_id: targetListId })
+          .eq('id', id);
+        if (error) throw error;
+        showSuccess("Tâche déplacée");
+        fetchCounts();
+        // On déclenche un rafraîchissement global via un événement personnalisé ou en rechargeant les tâches si nécessaire
+        window.dispatchEvent(new CustomEvent('task-moved'));
+      }
+    } catch (error: any) {
+      showError(error.message);
     }
   };
 
@@ -119,19 +155,25 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
           const hasChildren = lists.some(l => l.parent_id === list.id);
           const isExpanded = expandedLists.has(list.id);
           const isActive = activeList === list.id;
+          const isDragOver = dragOverId === list.id;
 
           return (
             <div key={list.id} className="space-y-0.5">
-              <button
-                onClick={() => setActiveList(list.id)}
+              <div
+                draggable
+                onDragStart={(e) => onDragStart(e, list.id, 'list')}
+                onDragOver={(e) => onDragOver(e, list.id)}
+                onDragLeave={() => setDragOverId(null)}
+                onDrop={(e) => onDrop(e, list.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-all duration-200 group",
+                  "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-all duration-200 group relative",
                   isActive 
                     ? "bg-white dark:bg-white/10 shadow-sm text-black dark:text-white" 
-                    : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                    : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white",
+                  isDragOver && "ring-2 ring-blue-500 bg-blue-500/10"
                 )}
               >
-                <div className="flex items-center gap-2 truncate">
+                <div className="flex items-center gap-2 truncate flex-1" onClick={() => setActiveList(list.id)}>
                   {hasChildren && (
                     <div onClick={(e) => toggleExpand(e, list.id)} className="p-0.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md">
                       {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -173,7 +215,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
                     </button>
                   </div>
                 </div>
-              </button>
+              </div>
               {isExpanded && renderListTree(list.id, depth + 1)}
             </div>
           );
@@ -231,9 +273,13 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
             <button
               key={item.id}
               onClick={() => setActiveList(item.id)}
+              onDragOver={(e) => onDragOver(e, item.id)}
+              onDragLeave={() => setDragOverId(null)}
+              onDrop={(e) => onDrop(e, item.id === 'my-day' ? '' : item.id)}
               className={cn(
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-all duration-200",
-                activeList === item.id ? "bg-white dark:bg-white/10 shadow-sm text-black dark:text-white" : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5"
+                activeList === item.id ? "bg-white dark:bg-white/10 shadow-sm text-black dark:text-white" : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5",
+                dragOverId === item.id && "ring-2 ring-blue-500 bg-blue-500/10"
               )}
             >
               <div className="flex items-center gap-2.5">
@@ -253,6 +299,29 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
             </button>
           </div>
           {renderListTree()}
+          
+          {/* Zone de dépôt pour remettre une liste à la racine */}
+          <div 
+            onDragOver={(e) => onDragOver(e, 'root')}
+            onDragLeave={() => setDragOverId(null)}
+            onDrop={async (e) => {
+              e.preventDefault();
+              setDragOverId(null);
+              const id = e.dataTransfer.getData('id');
+              const type = e.dataTransfer.getData('type');
+              if (type === 'list') {
+                await supabase.from('lists').update({ parent_id: null }).eq('id', id);
+                onListsUpdate();
+                showSuccess("Liste déplacée à la racine");
+              }
+            }}
+            className={cn(
+              "h-8 border-2 border-dashed border-transparent rounded-lg flex items-center justify-center transition-all",
+              dragOverId === 'root' && "border-blue-500 bg-blue-500/5"
+            )}
+          >
+            {dragOverId === 'root' && <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Déposer ici pour la racine</span>}
+          </div>
         </div>
       </div>
 
