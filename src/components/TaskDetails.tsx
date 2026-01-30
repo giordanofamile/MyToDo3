@@ -150,20 +150,22 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Récurrence</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Estimation</label>
                 <Select 
-                  value={task.recurrence || 'none'} 
-                  onValueChange={(val) => onUpdate(task.id, { recurrence: val })}
+                  value={task.estimated_minutes?.toString() || '0'} 
+                  onValueChange={(val) => onUpdate(task.id, { estimated_minutes: parseInt(val) })}
                 >
                   <SelectTrigger className="rounded-xl bg-white border-gray-100 h-11">
-                    <RefreshCw className="w-4 h-4 mr-2 text-blue-500" />
-                    <SelectValue placeholder="Aucune" />
+                    <Clock className="w-4 h-4 mr-2 text-orange-500" />
+                    <SelectValue placeholder="0 min" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-none shadow-2xl">
-                    <SelectItem value="none">Aucune</SelectItem>
-                    <SelectItem value="daily">Quotidien</SelectItem>
-                    <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                    <SelectItem value="monthly">Mensuel</SelectItem>
+                    <SelectItem value="0">Aucune</SelectItem>
+                    <SelectItem value="5">5 min</SelectItem>
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="60">1 heure</SelectItem>
+                    <SelectItem value="120">2 heures</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
