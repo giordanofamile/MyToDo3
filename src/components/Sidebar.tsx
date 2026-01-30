@@ -9,11 +9,11 @@ import {
   LogOut,
   Search,
   Moon,
-  Settings2
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 
@@ -69,6 +69,20 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     else {
       setCustomLists([...customLists, data[0]]);
       setActiveList(data[0].id);
+      showSuccess("Liste créée");
+    }
+  };
+
+  const deleteList = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Supprimer cette liste et toutes ses tâches ?")) return;
+
+    const { error } = await supabase.from('lists').delete().eq('id', id);
+    if (error) showError(error.message);
+    else {
+      setCustomLists(customLists.filter(l => l.id !== id));
+      if (activeList === id) setActiveList('my-day');
+      showSuccess("Liste supprimée");
     }
   };
 
@@ -84,7 +98,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   ];
 
   return (
-    <div className="w-72 h-screen bg-[#F5F5F7]/60 dark:bg-black/60 backdrop-blur-2xl border-r border-gray-200/50 dark:border-white/10 flex flex-col p-6">
+    <div className="w-72 h-screen bg-[#F5F5F7]/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border-r border-gray-200/50 dark:border-white/10 flex flex-col p-6 transition-colors duration-500">
       <div className="flex items-center justify-between mb-8 px-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-black dark:bg-white flex items-center justify-center shadow-lg">
@@ -143,14 +157,20 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                 key={list.id}
                 onClick={() => setActiveList(list.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group",
                   activeList === list.id 
                     ? "bg-white dark:bg-white/10 shadow-md dark:shadow-none text-black dark:text-white" 
                     : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
                 )}
               >
-                <Hash className={cn("w-5 h-5", list.color || "text-gray-400")} />
-                <span className="text-sm font-semibold truncate">{list.name}</span>
+                <div className="flex items-center gap-3 truncate">
+                  <Hash className={cn("w-5 h-5", list.color || "text-gray-400")} />
+                  <span className="text-sm font-semibold truncate">{list.name}</span>
+                </div>
+                <Trash2 
+                  className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all" 
+                  onClick={(e) => deleteList(e, list.id)}
+                />
               </button>
             ))}
           </nav>

@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import TaskItem from '@/components/TaskItem';
 import TaskDetails from '@/components/TaskDetails';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, LayoutGrid, ArrowUpDown, CheckCircle } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowUpDown, CheckCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
@@ -49,7 +49,13 @@ const Index = () => {
 
     if (activeList === 'important') {
       query = query.eq('is_important', true);
-    } else if (activeList !== 'tasks' && activeList !== 'planned' && activeList !== 'my-day') {
+    } else if (activeList === 'planned') {
+      query = query.not('due_date', 'is', null);
+    } else if (activeList === 'my-day') {
+      // Pour "Ma journée", on pourrait filtrer par date du jour ou simplement les tâches marquées
+      // Ici on garde la logique simple : les tâches créées aujourd'hui ou sans liste spécifique
+      query = query.is('list_id', null);
+    } else if (activeList !== 'tasks') {
       query = query.eq('list_id', activeList);
     }
 
@@ -73,7 +79,8 @@ const Index = () => {
         user_id: session.user.id,
         is_completed: false,
         is_important: activeList === 'important',
-        list_id: isCustomList ? activeList : null
+        list_id: isCustomList ? activeList : null,
+        due_date: activeList === 'planned' ? new Date().toISOString() : null
       }])
       .select();
 
@@ -103,7 +110,6 @@ const Index = () => {
     }
   };
 
-  // Logique de tri et filtrage
   const sortedTasks = [...tasks].sort((a, b) => {
     if (sortBy === 'importance') return (b.is_important ? 1 : 0) - (a.is_important ? 1 : 0);
     if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
@@ -119,8 +125,18 @@ const Index = () => {
 
   if (!session) return <Auth />;
 
+  const getTitle = () => {
+    switch(activeList) {
+      case 'my-day': return 'Ma journée';
+      case 'important': return 'Important';
+      case 'planned': return 'Planifié';
+      case 'tasks': return 'Tâches';
+      default: return 'Ma Liste';
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-white overflow-hidden font-sans antialiased">
+    <div className="flex h-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased transition-colors duration-500">
       <Sidebar 
         activeList={activeList} 
         setActiveList={setActiveList} 
@@ -128,7 +144,7 @@ const Index = () => {
         setSearchQuery={setSearchQuery}
       />
       
-      <main className="flex-1 flex flex-col bg-[#F5F5F7]/40 relative">
+      <main className="flex-1 flex flex-col bg-[#F5F5F7]/40 dark:bg-black/20 relative">
         <div className="max-w-4xl w-full mx-auto px-8 pt-16 pb-32 overflow-y-auto custom-scrollbar">
           <header className="mb-12">
             <div className="flex items-end justify-between mb-6">
@@ -137,32 +153,27 @@ const Index = () => {
                   key={activeList}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-5xl font-extrabold tracking-tight text-gray-900"
+                  className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white"
                 >
-                  {activeList === 'my-day' ? 'Ma journée' : 
-                   activeList === 'important' ? 'Important' : 
-                   activeList === 'tasks' ? 'Tâches' : 'Ma Liste'}
+                  {getTitle()}
                 </motion.h1>
-                <p className="text-gray-500 mt-2 font-semibold text-lg">
+                <p className="text-gray-500 dark:text-gray-400 mt-2 font-semibold text-lg">
                   {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
               </div>
               <div className="flex gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full bg-white/50 shadow-sm">
+                    <Button variant="ghost" size="icon" className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm">
                       <ArrowUpDown className="w-5 h-5 text-gray-500" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2">
+                  <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 dark:bg-[#2C2C2E]">
                     <DropdownMenuItem onClick={() => setSortBy('created')} className="rounded-xl">Plus récent</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortBy('importance')} className="rounded-xl">Importance</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortBy('alphabetical')} className="rounded-xl">Alphabétique</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="ghost" size="icon" className="rounded-full bg-white/50 shadow-sm">
-                  <LayoutGrid className="w-5 h-5 text-gray-500" />
-                </Button>
               </div>
             </div>
 
@@ -170,16 +181,16 @@ const Index = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white/60 backdrop-blur-xl p-4 rounded-3xl border border-white/50 shadow-sm mb-8"
+                className="bg-white/60 dark:bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/50 dark:border-white/10 shadow-sm mb-8"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-bold text-gray-700">{completedCount} sur {tasks.length} terminées</span>
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{completedCount} sur {tasks.length} terminées</span>
                   </div>
-                  <span className="text-sm font-bold text-blue-600">{Math.round(progress)}%</span>
+                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{Math.round(progress)}%</span>
                 </div>
-                <Progress value={progress} className="h-2 bg-gray-200/50" />
+                <Progress value={progress} className="h-2 bg-gray-200/50 dark:bg-white/10" />
               </motion.div>
             )}
           </header>
@@ -204,11 +215,15 @@ const Index = () => {
                 animate={{ opacity: 1 }}
                 className="text-center py-32"
               >
-                <div className="w-24 h-24 bg-white/50 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl border border-white">
-                  <Plus className="w-10 h-10 text-gray-300" />
+                <div className="w-24 h-24 bg-white/50 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl border border-white dark:border-white/10">
+                  {activeList === 'planned' ? <Calendar className="w-10 h-10 text-gray-300" /> : <Plus className="w-10 h-10 text-gray-300" />}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-1">Prêt à commencer ?</h3>
-                <p className="text-gray-400 font-medium">Ajoutez votre première tâche ci-dessous.</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                  {activeList === 'planned' ? 'Rien de prévu' : 'Prêt à commencer ?'}
+                </h3>
+                <p className="text-gray-400 font-medium">
+                  {activeList === 'planned' ? 'Les tâches avec une date apparaîtront ici.' : 'Ajoutez votre première tâche ci-dessous.'}
+                </p>
               </motion.div>
             )}
           </div>
@@ -218,7 +233,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto">
             <form 
               onSubmit={addTask}
-              className="bg-white/70 backdrop-blur-3xl p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 flex items-center gap-3"
+              className="bg-white/70 dark:bg-[#2C2C2E]/80 backdrop-blur-3xl p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 flex items-center gap-3"
             >
               <div className="p-2.5 bg-blue-500/10 rounded-2xl text-blue-600">
                 <Plus className="w-6 h-6" />
@@ -227,12 +242,12 @@ const Index = () => {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 placeholder="Ajouter une tâche..."
-                className="border-none bg-transparent focus-visible:ring-0 text-xl placeholder:text-gray-400 h-14 font-medium"
+                className="border-none bg-transparent focus-visible:ring-0 text-xl placeholder:text-gray-400 dark:text-white h-14 font-medium"
               />
               <Button 
                 type="submit"
                 disabled={!newTask.trim()}
-                className="bg-black hover:bg-gray-800 text-white rounded-2xl px-8 h-12 transition-all font-bold shadow-lg"
+                className="bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 text-white rounded-2xl px-8 h-12 transition-all font-bold shadow-lg"
               >
                 Ajouter
               </Button>
