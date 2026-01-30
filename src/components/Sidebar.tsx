@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Sun, Star, Calendar, Hash, Plus, LogOut, Search, Moon, Trash2, 
   Settings2, BarChart3, CalendarDays, ChevronRight, ChevronDown,
-  FolderPlus
+  FolderPlus, Settings
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import ListDialog from './ListDialog';
 import ProfileDialog from './ProfileDialog';
+import SettingsDialog from './SettingsDialog';
 import Logo from './Logo';
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
   const [profile, setProfile] = useState<any>(null);
   const [isListDialogOpen, setIsListDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<any>(null);
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
   const { setTheme, resolvedTheme } = useTheme();
@@ -205,18 +207,26 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
           <Logo size="sm" />
           <span className="font-black text-xl tracking-tighter dark:text-white">iTodo</span>
         </div>
-        {mounted && (
+        <div className="flex items-center gap-1">
           <button 
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} 
+            onClick={() => setIsSettingsDialogOpen(true)} 
             className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-transform active:scale-90"
           >
-            {resolvedTheme === 'dark' ? (
-              <Sun className="w-4 h-4 text-yellow-500" />
-            ) : (
-              <Moon className="w-4 h-4 text-gray-500" />
-            )}
+            <Settings className="w-4 h-4 text-gray-500" />
           </button>
-        )}
+          {mounted && (
+            <button 
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} 
+              className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-transform active:scale-90"
+            >
+              {resolvedTheme === 'dark' ? (
+                <Sun className="w-4 h-4 text-yellow-500" />
+              ) : (
+                <Moon className="w-4 h-4 text-gray-500" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="relative mb-6">
@@ -273,6 +283,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
 
       <ListDialog isOpen={isListDialogOpen} onClose={() => { setIsListDialogOpen(false); setEditingList(null); }} onSave={handleSaveList} initialData={editingList} />
       <ProfileDialog isOpen={isProfileDialogOpen} onClose={() => setIsProfileDialogOpen(false)} onUpdate={() => fetchUser()} />
+      <SettingsDialog isOpen={isSettingsDialogOpen} onClose={() => setIsSettingsDialogOpen(false)} />
     </div>
   );
 };
