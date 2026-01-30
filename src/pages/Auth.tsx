@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Apple, Mail, Lock } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
+import Logo from '@/components/Logo';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -42,18 +43,16 @@ const Auth = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl mb-4">
-            <Apple className="w-8 h-8 text-black" />
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">iTodo</h1>
-          <p className="text-gray-500 mt-2">Organisez votre vie, avec élégance.</p>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Logo size="lg" className="mb-6" />
+          <h1 className="text-4xl font-black tracking-tighter text-gray-900">iTodo</h1>
+          <p className="text-gray-500 mt-2 font-medium">Organisez votre vie, avec élégance.</p>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-xl rounded-[2rem] overflow-hidden">
+        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-xl rounded-[2.5rem] overflow-hidden">
           <CardHeader className="space-y-1 pt-8">
-            <CardTitle className="text-2xl text-center">{isSignUp ? 'Créer un compte' : 'Se connecter'}</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-2xl text-center font-bold">{isSignUp ? 'Créer un compte' : 'Se connecter'}</CardTitle>
+            <CardDescription className="text-center font-medium">
               Entrez vos identifiants pour continuer
             </CardDescription>
           </CardHeader>
@@ -61,11 +60,11 @@ const Auth = () => {
             <form onSubmit={handleAuth} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
                   <Input
                     type="email"
                     placeholder="Email"
-                    className="pl-10 bg-gray-50/50 border-none h-12 rounded-xl focus-visible:ring-1 focus-visible:ring-black"
+                    className="pl-12 bg-gray-50/50 border-none h-12 rounded-2xl focus-visible:ring-2 focus-visible:ring-black/5"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -74,11 +73,11 @@ const Auth = () => {
               </div>
               <div className="space-y-2">
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
                   <Input
                     type="password"
                     placeholder="Mot de passe"
-                    className="pl-10 bg-gray-50/50 border-none h-12 rounded-xl focus-visible:ring-1 focus-visible:ring-black"
+                    className="pl-12 bg-gray-50/50 border-none h-12 rounded-2xl focus-visible:ring-2 focus-visible:ring-black/5"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -87,7 +86,7 @@ const Auth = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-black hover:bg-gray-800 text-white rounded-xl transition-all duration-300 font-medium"
+                className="w-full h-14 bg-black hover:bg-gray-800 text-white rounded-2xl transition-all duration-300 font-bold text-lg shadow-lg active:scale-95"
                 disabled={loading}
               >
                 {loading ? 'Chargement...' : isSignUp ? "S'inscrire" : 'Se connecter'}
@@ -96,7 +95,7 @@ const Auth = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-gray-500 hover:text-black transition-colors"
+                className="text-sm font-bold text-gray-400 hover:text-black transition-colors"
               >
                 {isSignUp ? 'Déjà un compte ? Se connecter' : "Pas de compte ? S'inscrire"}
               </button>

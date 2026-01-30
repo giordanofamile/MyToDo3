@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import ListDialog from './ListDialog';
 import ProfileDialog from './ProfileDialog';
+import Logo from './Logo';
 
 interface SidebarProps {
   activeList: string;
@@ -160,7 +161,6 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                         setEditingList({ parent_id: list.id }); 
                         setIsListDialogOpen(true); 
                       }}
-                      title="Ajouter une sous-liste"
                       className="p-1 hover:bg-blue-500/10 rounded-md transition-colors"
                     >
                       <FolderPlus className="w-3.5 h-3.5 text-blue-500" />
@@ -171,7 +171,6 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                         setEditingList(list); 
                         setIsListDialogOpen(true); 
                       }}
-                      title="Paramètres"
                       className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors"
                     >
                       <Settings2 className="w-3.5 h-3.5 text-gray-300 hover:text-blue-500" />
@@ -181,7 +180,6 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
                         e.stopPropagation(); 
                         handleDeleteList(list.id);
                       }}
-                      title="Supprimer"
                       className="p-1 hover:bg-red-500/10 rounded-md transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-gray-300 hover:text-red-500" />
@@ -209,10 +207,8 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     <div className="w-72 h-screen bg-[#F5F5F7]/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border-r border-gray-200/50 dark:border-white/10 flex flex-col p-6">
       <div className="flex items-center justify-between mb-8 px-2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-black dark:bg-white flex items-center justify-center shadow-lg">
-            <div className="w-4 h-4 border-2 border-white dark:border-black rounded-full" />
-          </div>
-          <span className="font-bold text-xl tracking-tight dark:text-white">iTodo</span>
+          <Logo size="sm" />
+          <span className="font-black text-xl tracking-tighter dark:text-white">iTodo</span>
         </div>
         {mounted && (
           <button 
