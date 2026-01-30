@@ -4,6 +4,8 @@ import { Play, Pause, RotateCcw, Coffee, Brain, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { showSuccess } from '@/utils/toast';
 
 interface PomodoroTimerProps {
   isOpen: boolean;
@@ -17,6 +19,16 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
 
   const totalTime = mode === 'work' ? 25 * 60 : 5 * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
+
+  const saveFocusSession = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from('focus_sessions').insert([
+      { user_id: user.id, duration_minutes: 25 }
+    ]);
+    showSuccess("Session de focus enregistrée !");
+  };
 
   const toggleTimer = () => setIsActive(!isActive);
 
@@ -33,7 +45,9 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
       }, 1000);
     } else if (timeLeft === 0) {
       setIsActive(false);
-      // Optionnel: Jouer un son ici
+      if (mode === 'work') {
+        saveFocusSession();
+      }
       const newMode = mode === 'work' ? 'break' : 'work';
       setMode(newMode);
       setTimeLeft(newMode === 'work' ? 25 * 60 : 5 * 60);

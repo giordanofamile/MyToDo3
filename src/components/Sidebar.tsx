@@ -16,7 +16,8 @@ import {
   Music,
   Book,
   Plane,
-  Settings2
+  Settings2,
+  BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -110,6 +111,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   };
 
   const staticMenu = [
+    { id: 'dashboard', label: 'Insights', icon: BarChart3, color: 'text-indigo-500' },
     { id: 'my-day', label: 'Ma journée', icon: Sun, color: 'text-blue-500' },
     { id: 'important', label: 'Important', icon: Star, color: 'text-pink-500' },
     { id: 'planned', label: 'Planifié', icon: Calendar, color: 'text-teal-500' },
