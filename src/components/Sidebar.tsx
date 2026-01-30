@@ -9,13 +9,25 @@ import {
   LogOut,
   Search,
   Moon,
-  Trash2
+  Trash2,
+  Briefcase,
+  ShoppingCart,
+  Heart,
+  Music,
+  Book,
+  Plane,
+  Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
+import ListDialog from './ListDialog';
+
+const ICON_MAP: Record<string, any> = {
+  Hash, Briefcase, ShoppingCart, Heart, Star, Music, Book, Plane
+};
 
 interface SidebarProps {
   activeList: string;
@@ -27,6 +39,8 @@ interface SidebarProps {
 const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: SidebarProps) => {
   const [customLists, setCustomLists] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [isListDialogOpen, setIsListDialogOpen] = useState(false);
+  const [editingList, setEditingList] = useState<any>(null);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -49,28 +63,33 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     else setCustomLists(data || []);
   };
 
-  const createNewList = async () => {
-    const name = prompt("Nom de la nouvelle liste :");
-    if (!name) return;
+  const handleSaveList = async (listData: { name: string, icon: string, color: string }) => {
+    if (editingList) {
+      const { data, error } = await supabase
+        .from('lists')
+        .update(listData)
+        .eq('id', editingList.id)
+        .select();
 
-    const colors = ['text-blue-500', 'text-pink-500', 'text-purple-500', 'text-orange-500', 'text-green-500'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      if (error) showError(error.message);
+      else {
+        setCustomLists(customLists.map(l => l.id === editingList.id ? data[0] : l));
+        showSuccess("Liste mise à jour");
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('lists')
+        .insert([{ ...listData, user_id: user.id }])
+        .select();
 
-    const { data, error } = await supabase
-      .from('lists')
-      .insert([{ 
-        name, 
-        user_id: user.id,
-        color: randomColor
-      }])
-      .select();
-
-    if (error) showError(error.message);
-    else {
-      setCustomLists([...customLists, data[0]]);
-      setActiveList(data[0].id);
-      showSuccess("Liste créée");
+      if (error) showError(error.message);
+      else {
+        setCustomLists([...customLists, data[0]]);
+        setActiveList(data[0].id);
+        showSuccess("Liste créée");
+      }
     }
+    setEditingList(null);
   };
 
   const deleteList = async (e: React.MouseEvent, id: string) => {
@@ -147,32 +166,44 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
         <div className="space-y-2">
           <div className="flex items-center justify-between px-3 mb-1">
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Mes Listes</span>
-            <button onClick={createNewList} className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors">
+            <button 
+              onClick={() => { setEditingList(null); setIsListDialogOpen(true); }} 
+              className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors"
+            >
               <Plus className="w-3 h-3 text-gray-500" />
             </button>
           </div>
           <nav className="space-y-1">
-            {customLists.map((list) => (
-              <button
-                key={list.id}
-                onClick={() => setActiveList(list.id)}
-                className={cn(
-                  "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group",
-                  activeList === list.id 
-                    ? "bg-white dark:bg-white/10 shadow-md dark:shadow-none text-black dark:text-white" 
-                    : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
-                )}
-              >
-                <div className="flex items-center gap-3 truncate">
-                  <Hash className={cn("w-5 h-5", list.color || "text-gray-400")} />
-                  <span className="text-sm font-semibold truncate">{list.name}</span>
-                </div>
-                <Trash2 
-                  className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all" 
-                  onClick={(e) => deleteList(e, list.id)}
-                />
-              </button>
-            ))}
+            {customLists.map((list) => {
+              const Icon = ICON_MAP[list.icon || 'Hash'] || Hash;
+              return (
+                <button
+                  key={list.id}
+                  onClick={() => setActiveList(list.id)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group",
+                    activeList === list.id 
+                      ? "bg-white dark:bg-white/10 shadow-md dark:shadow-none text-black dark:text-white" 
+                      : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <Icon className={cn("w-5 h-5", list.color || "text-gray-400")} />
+                    <span className="text-sm font-semibold truncate">{list.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <Settings2 
+                      className="w-4 h-4 text-gray-300 hover:text-blue-500 cursor-pointer" 
+                      onClick={(e) => { e.stopPropagation(); setEditingList(list); setIsListDialogOpen(true); }}
+                    />
+                    <Trash2 
+                      className="w-4 h-4 text-gray-300 hover:text-red-500 cursor-pointer" 
+                      onClick={(e) => deleteList(e, list.id)}
+                    />
+                  </div>
+                </button>
+              );
+            })}
           </nav>
         </div>
       </div>
@@ -194,6 +225,13 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
           </button>
         </div>
       </div>
+
+      <ListDialog 
+        isOpen={isListDialogOpen}
+        onClose={() => { setIsListDialogOpen(false); setEditingList(null); }}
+        onSave={handleSaveList}
+        initialData={editingList}
+      />
     </div>
   );
 };

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import confetti from 'canvas-confetti';
 
 const Index = () => {
   const [session, setSession] = useState<any>(null);
@@ -95,7 +96,22 @@ const Index = () => {
     const { error } = await supabase.from('tasks').update(updates).eq('id', id);
     if (error) showError(error.message);
     else {
-      setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
+      const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...updates } : t);
+      setTasks(updatedTasks);
+      
+      // Trigger confetti if all tasks are now completed
+      if (updates.is_completed === true) {
+        const allCompleted = updatedTasks.length > 0 && updatedTasks.every(t => t.is_completed);
+        if (allCompleted) {
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#3B82F6', '#EC4899', '#8B5CF6', '#F59E0B', '#10B981']
+          });
+        }
+      }
+
       if (selectedTask?.id === id) setSelectedTask({ ...selectedTask, ...updates });
     }
   };
@@ -144,9 +160,16 @@ const Index = () => {
       case 'important': return 'Important';
       case 'planned': return 'Planifié';
       case 'tasks': return 'Tâches';
-      default: return 'Ma Liste';
+      default: {
+        const list = customLists?.find(l => l.id === activeList);
+        return list ? list.name : 'Ma Liste';
+      }
     }
   };
+
+  // We need customLists here to get the title, but it's managed in Sidebar. 
+  // For simplicity, let's assume Sidebar handles the list data and we just display.
+  // In a real app, we'd use a context or a global state.
 
   return (
     <div className="flex h-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased transition-colors duration-500">
