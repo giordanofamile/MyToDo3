@@ -164,8 +164,8 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
-            <div className="h-[420px]">
-              <TabsContent value="general" className="space-y-8 mt-0">
+            <div className="h-[420px] relative">
+              <TabsContent value="general" className="space-y-8 mt-0 h-full">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">NOM DE LA LISTE</Label>
                   <Input
@@ -239,10 +239,10 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 </div>
               </TabsContent>
 
-              <TabsContent value="background" className="mt-0 h-full">
-                <ScrollArea className="h-full pr-4 custom-scrollbar">
-                  <div className="space-y-8 pb-6">
-                    {/* Zone Couleur de fond - Maintenant dans le scroll */}
+              <TabsContent value="background" className="mt-0 h-full flex flex-col">
+                <ScrollArea className="flex-1 pr-4 custom-scrollbar">
+                  <div className="space-y-8 py-1 pb-6">
+                    {/* Zone Couleur de fond */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Palette className="w-3.5 h-3.5 text-[#3B82F6]" />
@@ -272,7 +272,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                       </div>
                     </div>
 
-                    {/* Zone Image Unsplash - Également dans le scroll */}
+                    {/* Zone Image Unsplash */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <ImageIcon className="w-3.5 h-3.5 text-[#3B82F6]" />
@@ -316,9 +316,16 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
           <Button 
             onClick={handleSave}
             disabled={!formData.name.trim()}
-            className="w-full h-16 bg-[#1A1A1A] dark:bg-white text-white dark:text-black hover:bg-black dark:hover:bg-[#F8F9FA] rounded-2xl font-bold text-lg transition-all shadow-xl active:scale-[0.98]"
+            className={cn(
+              "w-full h-16 rounded-2xl font-bold text-lg transition-all shadow-xl active:scale-[0.98]",
+              formData.name.trim() 
+                ? "bg-[#1A1A1A] dark:bg-white text-white dark:text-black hover:bg-black dark:hover:bg-[#F8F9FA]" 
+                : "bg-gray-200 dark:bg-white/10 text-gray-400 cursor-not-allowed"
+            )}
           >
-            {initialData?.id ? 'Enregistrer les modifications' : 'Créer la liste'}
+            {formData.name.trim() 
+              ? (initialData?.id ? 'Enregistrer les modifications' : 'Créer la liste') 
+              : 'Nom requis (onglet Général)'}
           </Button>
         </div>
       </DialogContent>
