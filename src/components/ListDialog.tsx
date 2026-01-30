@@ -13,6 +13,9 @@ import { Search, X, Image as ImageIcon, Palette, Check } from 'lucide-react';
 const ICON_CATEGORIES: Record<string, string[]> = {
   'Essentiels': ['Hash', 'Star', 'Check', 'AlertCircle', 'Info', 'HelpCircle', 'Plus', 'Target', 'Zap', 'Flag', 'Bell', 'Bookmark', 'Tag', 'Heart', 'Flame', 'Shield', 'Lock', 'Key', 'Eye', 'Settings', 'Trash2', 'Edit', 'Share2', 'ExternalLink', 'Link'],
   'Travail': ['Briefcase', 'FileText', 'Presentation', 'Mail', 'Calendar', 'Clipboard', 'Database', 'HardDrive', 'Layers', 'Trello', 'PenTool', 'Printer', 'Send', 'Archive', 'BarChart', 'PieChart', 'LineChart', 'TrendingUp', 'Users', 'UserPlus', 'Building', 'Globe', 'Languages'],
+  'Santé & Sport': ['Activity', 'Heart', 'Dumbbell', 'Timer', 'Zap', 'Apple', 'Coffee', 'GlassWater', 'Moon', 'Sun', 'Thermometer', 'Stethoscope', 'Brain', 'Smile', 'Frown'],
+  'Voyage & Nature': ['Plane', 'Map', 'Compass', 'Mountain', 'Trees', 'Cloud', 'Sun', 'Umbrella', 'Waves', 'Anchor', 'Car', 'Bike', 'Train', 'Tent', 'Camera'],
+  'Maison & Vie': ['Home', 'ShoppingBag', 'ShoppingCart', 'CreditCard', 'Gift', 'Music', 'Tv', 'Smartphone', 'Laptop', 'Gamepad', 'Book', 'Pencil', 'Brush', 'Utensils', 'Wine'],
 };
 
 const COLORS = [
@@ -69,9 +72,11 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
   }, [initialData, isOpen]);
 
   const fetchImages = (category: string) => {
+    // Simulation d'une large bibliothèque d'images Unsplash par catégories
     const mockIds: Record<string, string[]> = {
-      'Minimal': ['1494438639946-1ebd1d20bf85', '1507525428034-b723cf961d3e', '1483728642387-6c3bdd6c93e5'],
-      'Nature': ['1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05', '1447752875215-b2761acb3c5d'],
+      'Minimal': ['1494438639946-1ebd1d20bf85', '1507525428034-b723cf961d3e', '1483728642387-6c3bdd6c93e5', '1490750967868-88aa4486c946', '1518133910546-b6c2fb7d79e3'],
+      'Nature': ['1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05', '1447752875215-b2761acb3c5d', '1464822759023-fed622ff2c3b', '1501785888041-af3ef285b470'],
+      'Architecture': ['1486406146926-c627a92ad1ab', '1449156003053-c3d8c0f110ba', '1470723710355-95304d8aece4', '1511818966892-d7d671e672a2', '1496449903678-68ddcb189a2e'],
     };
     const ids = mockIds[category] || mockIds['Minimal'];
     const urls = ids.map(id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=600&q=80`);
@@ -150,26 +155,37 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-lg px-3 h-9 mb-4">
                   <Search className="w-3.5 h-3.5 text-[#94A3B8]" />
                   <input 
-                    placeholder="Rechercher..." 
+                    placeholder="Rechercher parmi des centaines d'icônes..." 
                     className="bg-transparent border-none focus:ring-0 text-xs w-full font-medium"
                     value={iconSearch}
                     onChange={(e) => setIconSearch(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-6 gap-2 pb-4">
-                  {Object.values(ICON_CATEGORIES).flat().filter(i => i.toLowerCase().includes(iconSearch.toLowerCase())).map((iconName) => {
-                    const Icon = (LucideIcons as any)[iconName];
+                <div className="space-y-6 pb-4">
+                  {Object.entries(ICON_CATEGORIES).map(([category, icons]) => {
+                    const filteredIcons = icons.filter(i => i.toLowerCase().includes(iconSearch.toLowerCase()));
+                    if (filteredIcons.length === 0) return null;
                     return (
-                      <button
-                        key={iconName}
-                        onClick={() => setFormData({ ...formData, icon: iconName })}
-                        className={cn(
-                          "flex items-center justify-center h-10 rounded-lg transition-all",
-                          formData.icon === iconName ? "bg-blue-500/10 text-blue-500" : "text-[#94A3B8] hover:bg-gray-50 dark:hover:bg-white/5"
-                        )}
-                      >
-                        {Icon && <Icon className="w-5 h-5" />}
-                      </button>
+                      <div key={category} className="space-y-2">
+                        <h4 className="text-[8px] font-black uppercase tracking-widest text-[#94A3B8] ml-1">{category}</h4>
+                        <div className="grid grid-cols-6 gap-2">
+                          {filteredIcons.map((iconName) => {
+                            const Icon = (LucideIcons as any)[iconName];
+                            return (
+                              <button
+                                key={iconName}
+                                onClick={() => setFormData({ ...formData, icon: iconName })}
+                                className={cn(
+                                  "flex items-center justify-center h-10 rounded-lg transition-all",
+                                  formData.icon === iconName ? "bg-blue-500/10 text-blue-500" : "text-[#94A3B8] hover:bg-gray-50 dark:hover:bg-white/5"
+                                )}
+                              >
+                                {Icon && <Icon className="w-5 h-5" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -177,32 +193,45 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
 
               <TabsContent value="background" className="mt-0">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-6 gap-2">
-                    {COLORS.map((color) => (
-                      <button
-                        key={color.bg}
-                        onClick={() => setFormData({ ...formData, bg_color: color.bg, bg_image: '' })}
-                        className={cn(
-                          "h-10 rounded-lg transition-all border-2",
-                          color.bg,
-                          formData.bg_color === color.bg ? "border-[#3B82F6]" : "border-transparent"
-                        )}
-                      />
-                    ))}
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">COULEUR D'IMMERSION</Label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {COLORS.map((color) => (
+                        <button
+                          key={color.bg}
+                          onClick={() => setFormData({ ...formData, bg_color: color.bg, bg_image: '' })}
+                          className={cn(
+                            "h-10 rounded-lg transition-all border-2",
+                            color.bg,
+                            formData.bg_color === color.bg ? "border-[#3B82F6]" : "border-transparent"
+                          )}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {images.map((img, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setFormData({ ...formData, bg_image: img, bg_color: '' })}
-                        className={cn(
-                          "aspect-video rounded-lg overflow-hidden border-2 transition-all",
-                          formData.bg_image === img ? "border-[#3B82F6]" : "border-transparent"
-                        )}
-                      >
-                        <img src={img} alt="Unsplash" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]">GALERIE D'IMAGES</Label>
+                      <div className="flex gap-2">
+                        {['Minimal', 'Nature', 'Architecture'].map(cat => (
+                          <button key={cat} onClick={() => fetchImages(cat)} className="text-[8px] font-black uppercase tracking-widest text-[#3B82F6] hover:underline">{cat}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {images.map((img, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setFormData({ ...formData, bg_image: img, bg_color: '' })}
+                          className={cn(
+                            "aspect-video rounded-lg overflow-hidden border-2 transition-all",
+                            formData.bg_image === img ? "border-[#3B82F6]" : "border-transparent"
+                          )}
+                        >
+                          <img src={img} alt="Unsplash" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </TabsContent>
