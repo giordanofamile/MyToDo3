@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Label } from '@/components/ui/label';
-import { Paperclip, FileText, Loader2, Download, Trash2, UploadCloud } from 'lucide-react';
+import { FileText, Loader2, Download, Trash2, UploadCloud } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
 import imageCompression from 'browser-image-compression';
 import { cn } from '@/lib/utils';
@@ -30,68 +30,81 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
     else setAttachments(data || []);
   };
 
-  const processAndUploadFile = async (file: File) => {
+  const processAndUploadFiles = async (files: FileList | File[]) => {
     setUploading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Non authentifié");
-
-      let fileToUpload = file;
-
-      // 1. Compression si c'est une image
-      if (file.type.startsWith('image/')) {
-        const options = {
-          maxSizeMB: 0.5, // 500 KB
-          maxWidthOrHeight: 1920,
-          useWebWorker: true
-        };
-        fileToUpload = await imageCompression(file, options);
-      } else if (file.size > 500 * 1024) {
-        throw new Error("Le fichier dépasse la limite de 500 Ko");
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${user.id}/${taskId}/${fileName}`;
-
-      // 2. Upload vers Supabase Storage (Bucket 'attachments')
-      const { error: uploadError } = await supabase.storage
-        .from('attachments')
-        .upload(filePath, fileToUpload);
-
-      if (uploadError) {
-        if (uploadError.message.includes("bucket not found")) {
-          throw new Error("Le bucket 'attachments' n'existe pas dans Supabase. Veuillez le créer dans l'onglet Storage.");
-        }
-        throw uploadError;
-      }
-
-      // 3. Enregistrement des métadonnées en base
-      const { error: dbError } = await supabase
-        .from('attachments')
-        .insert([{
-          task_id: taskId,
-          user_id: user.id,
-          name: file.name,
-          file_path: filePath,
-          file_type: file.type,
-          file_size: fileToUpload.size
-        }]);
-
-      if (dbError) throw dbError;
-
-      showSuccess(`Fichier "${file.name}" ajouté avec succès`);
-      fetchAttachments();
-    } catch (error: any) {
-      showError(error.message);
-    } finally {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      showError("Vous devez être connecté pour ajouter des fichiers.");
       setUploading(false);
+      return;
     }
+
+    const uploadPromises = Array.from(files).map(async (file) => {
+      try {
+        let fileToUpload = file;
+
+        // 1. Compression si c'est une image
+        if (file.type.startsWith('image/')) {
+          const options = {
+            maxSizeMB: 0.5, // 500 KB
+            maxWidthOrHeight: 1920,
+            useWebWorker: true
+          };
+          fileToUpload = await imageCompression(file, options);
+        } else if (file.size > 500 * 1024) {
+          throw new Error(`Le fichier "${file.name}" dépasse la limite de 500 Ko`);
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${user.id}/${taskId}/${fileName}`;
+
+        // 2. Upload vers Supabase Storage (Bucket 'attachments')
+        const { error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(filePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        // 3. Enregistrement des métadonnées en base
+        const { error: dbError } = await supabase
+          .from('attachments')
+          .insert([{
+            task_id: taskId,
+            user_id: user.id,
+            name: file.name,
+            file_path: filePath,
+            file_type: file.type,
+            file_size: fileToUpload.size
+          }]);
+
+        if (dbError) throw dbError;
+
+        return true;
+      } catch (error: any) {
+        showError(error.message);
+        return false;
+      }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const successCount = results.filter(Boolean).length;
+
+    if (successCount > 0) {
+      showSuccess(`${successCount} fichier(s) ajouté(s)`);
+      fetchAttachments();
+    }
+    setUploading(false);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processAndUploadFile(file);
+    if (e.target.files && e.target.files.length > 0) {
+      processAndUploadFiles(e.target.files);
+    }
   };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -111,8 +124,9 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
     e.stopPropagation();
     setIsDragging(false);
     
-    const file = e.dataTransfer.files?.[0];
-    if (file) processAndUploadFile(file);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processAndUploadFiles(e.dataTransfer.files);
+    }
   }, []);
 
   const deleteAttachment = async (attachment: any) => {
@@ -148,7 +162,6 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
         <Label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Pièces jointes (Max 500 Ko)</Label>
       </div>
 
-      {/* Zone de Drop / Upload */}
       <div 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -163,6 +176,7 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
         <input 
           type="file" 
           id="file-upload" 
+          multiple
           className="absolute inset-0 opacity-0 cursor-pointer" 
           onChange={handleFileSelect}
           disabled={uploading}
@@ -181,15 +195,14 @@ const AttachmentManager = ({ taskId }: AttachmentManagerProps) => {
         
         <div className="text-center">
           <p className="text-sm font-bold dark:text-white">
-            {uploading ? "Téléchargement..." : "Glissez un fichier ici"}
+            {uploading ? "Téléchargement..." : "Glissez vos fichiers ici"}
           </p>
           <p className="text-[10px] text-gray-400 font-medium mt-1">
-            Ou cliquez pour parcourir vos dossiers
+            Plusieurs fichiers acceptés (Max 500 Ko par fichier)
           </p>
         </div>
       </div>
 
-      {/* Liste des fichiers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {attachments.map((att) => (
           <div key={att.id} className="flex items-center gap-3 p-3 bg-white dark:bg-white/5 rounded-2xl group border border-gray-50 dark:border-white/5 shadow-sm hover:shadow-md transition-all">
