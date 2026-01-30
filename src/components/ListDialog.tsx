@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Search, Image as ImageIcon, Palette, Smile, Info, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 const ICON_CATEGORIES: Record<string, string[]> = {
   'Essentiels': ['Hash', 'Star', 'Check', 'AlertCircle', 'Info', 'HelpCircle', 'Plus', 'Target', 'Zap', 'Flag', 'Bell', 'Bookmark', 'Tag', 'Heart', 'Flame'],
@@ -17,8 +17,52 @@ const ICON_CATEGORIES: Record<string, string[]> = {
   'Personnel': ['User', 'Home', 'ShoppingBag', 'Coffee', 'Utensils', 'Bed', 'Baby', 'Dog', 'Cat', 'GlassWater', 'Wine', 'Pizza', 'Apple', 'Car', 'Bike'],
   'Nature': ['Leaf', 'TreePine', 'Cloud', 'Sun', 'Moon', 'Zap', 'Droplets', 'Wind', 'Mountain', 'Flower', 'Bird', 'Fish', 'Shell', 'Sunrise', 'Sunset'],
   'Logistique': ['Truck', 'Package', 'Box', 'Map', 'Navigation', 'Compass', 'Plane', 'Train', 'Ship', 'Anchor', 'Globe', 'MapPin', 'Warehouse', 'Container', 'Forklift'],
-  'Santé': ['Activity', 'HeartPulse', 'Stethoscope', 'Pill', 'Thermometer', 'FirstAid', 'Brain', 'Eye', 'Dna', 'Microscope', 'Syringe', 'Bandage', 'Cross', 'Apple', 'Salad'],
-  'Éducation': ['Book', 'BookOpen', 'GraduationCap', 'School', 'Library', 'Calculator', 'Compass', 'Languages', 'Globe2', 'Pencil', 'Eraser', 'Ruler', 'Microscope', 'Atom', 'Lightbulb']
+  'Santé': ['Activity', 'HeartPulse', 'Stethoscope', 'Pill', 'Thermometer', 'FirstAid', 'Brain', 'Eye', 'Dna', 'Microscope', 'Syringe', 'Bandage', 'Cross'],
+  'Éducation': ['Book', 'BookOpen', 'GraduationCap', 'School', 'Library', 'Calculator', 'Compass', 'Languages', 'Globe2', 'Pencil', 'Eraser', 'Ruler', 'Atom', 'Lightbulb'],
+  'Finance': ['Banknote', 'Wallet', 'CreditCard', 'Coins', 'PiggyBank', 'TrendingUp', 'TrendingDown', 'DollarSign', 'Euro', 'Receipt', 'Landmark', 'PieChart'],
+  'Voyage': ['Plane', 'Train', 'Car', 'Bike', 'Ship', 'Map', 'Compass', 'Globe', 'Palmtree', 'Tent', 'Luggage', 'Hotel', 'Ticket', 'Mountain'],
+  'Sport': ['Dumbbell', 'Trophy', 'Medal', 'Target', 'Timer', 'Activity', 'Footprints', 'Bike', 'Waves', 'Mountain', 'Flame', 'HeartPulse'],
+  'Météo': ['Sun', 'Moon', 'Cloud', 'CloudRain', 'CloudLightning', 'CloudSnow', 'Wind', 'Droplets', 'Thermometer', 'Sunrise', 'Sunset', 'Umbrella'],
+  'Média': ['Music', 'Video', 'Camera', 'Mic', 'Headphones', 'Speaker', 'Play', 'Pause', 'Film', 'Image', 'Tv', 'Radio'],
+  'Social': ['Users', 'UserPlus', 'MessageCircle', 'MessageSquare', 'Share2', 'Heart', 'ThumbsUp', 'AtSign', 'Link', 'Globe', 'Smile'],
+  'Outils': ['Hammer', 'Wrench', 'Settings', 'Scissors', 'PenTool', 'Brush', 'Eraser', 'Pencil', 'Ruler', 'Trash2', 'Save', 'Copy'],
+  'Science': ['FlaskConical', 'Atom', 'Dna', 'Microscope', 'Telescope', 'Brain', 'Lightbulb', 'Magnet', 'Beaker', 'Binary', 'Orbit'],
+  'Shopping': ['ShoppingBag', 'ShoppingCart', 'Tag', 'Gift', 'CreditCard', 'Store', 'Package', 'Truck', 'Ticket', 'Percent'],
+  'Sécurité': ['Shield', 'Lock', 'Unlock', 'Key', 'Eye', 'EyeOff', 'Fingerprint', 'ShieldCheck', 'ShieldAlert', 'FileLock', 'HardDrive']
+};
+
+// Dictionnaire de traduction pour la recherche en français
+const ICON_TRANSLATIONS: Record<string, string[]> = {
+  'travail': ['work', 'briefcase', 'file', 'presentation', 'mail', 'calendar', 'clipboard', 'archive'],
+  'argent': ['finance', 'bank', 'wallet', 'credit', 'coins', 'dollar', 'euro', 'receipt'],
+  'maison': ['home', 'user', 'bed'],
+  'voiture': ['car', 'bike', 'truck', 'navigation'],
+  'avion': ['plane', 'travel', 'voyage'],
+  'livre': ['book', 'education', 'school', 'pencil', 'library'],
+  'coeur': ['heart', 'love', 'social', 'health'],
+  'soleil': ['sun', 'weather', 'météo', 'light'],
+  'nuage': ['cloud', 'rain', 'snow'],
+  'musique': ['music', 'media', 'audio', 'headphones'],
+  'paramètres': ['settings', 'tools', 'wrench', 'hammer'],
+  'poubelle': ['trash', 'delete'],
+  'recherche': ['search', 'find', 'eye'],
+  'utilisateur': ['user', 'profile', 'social'],
+  'message': ['message', 'chat', 'mail', 'send'],
+  'santé': ['health', 'activity', 'heart', 'pill', 'brain'],
+  'école': ['school', 'education', 'book', 'graduation'],
+  'nourriture': ['food', 'coffee', 'utensils', 'pizza', 'apple'],
+  'café': ['coffee', 'cup', 'drink'],
+  'clé': ['key', 'lock', 'security'],
+  'cadenas': ['lock', 'security', 'shield'],
+  'code': ['code', 'terminal', 'laptop', 'binary'],
+  'ordinateur': ['laptop', 'monitor', 'cpu', 'tech'],
+  'téléphone': ['smartphone', 'phone', 'mobile'],
+  'montre': ['watch', 'timer', 'clock'],
+  'appareil': ['camera', 'image', 'video'],
+  'sport': ['dumbbell', 'trophy', 'medal', 'activity'],
+  'météo': ['weather', 'sun', 'cloud', 'rain'],
+  'voyage': ['travel', 'plane', 'map', 'hotel'],
+  'cadeau': ['gift', 'shopping', 'tag']
 };
 
 const COLORS = [
@@ -96,9 +140,18 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
   };
 
   const filteredIcons = Object.entries(ICON_CATEGORIES).reduce((acc, [category, icons]) => {
-    const filtered = icons.filter(icon => 
-      icon.toLowerCase().includes(iconSearch.toLowerCase())
-    );
+    const searchLower = iconSearch.toLowerCase();
+    
+    // Récupère les termes anglais associés si la recherche est en français
+    const translatedTerms = ICON_TRANSLATIONS[searchLower] || [];
+    
+    const filtered = icons.filter(icon => {
+      const iconLower = icon.toLowerCase();
+      // Vérifie si le nom de l'icône contient la recherche ou un des termes traduits
+      return iconLower.includes(searchLower) || 
+             translatedTerms.some(term => iconLower.includes(term));
+    });
+    
     if (filtered.length > 0) acc[category] = filtered;
     return acc;
   }, {} as Record<string, string[]>);
@@ -159,7 +212,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 <div className="flex items-center gap-3 bg-white dark:bg-white/5 rounded-2xl px-4 h-12 shadow-sm">
                   <Search className="w-4 h-4 text-[#94A3B8]" />
                   <input 
-                    placeholder="Rechercher une icône..." 
+                    placeholder="Rechercher (ex: travail, argent, sport...)" 
                     className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium"
                     value={iconSearch}
                     onChange={(e) => setIconSearch(e.target.value)}
@@ -215,6 +268,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               <TabsContent value="background" className="mt-0 h-full">
                 <ScrollArea className="h-full pr-4 custom-scrollbar">
                   <div className="space-y-8 pb-6">
+                    {/* Couleur de fond placée en haut */}
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">COULEUR DE FOND</Label>
                       <div className="grid grid-cols-4 gap-3">
@@ -241,6 +295,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                       </div>
                     </div>
 
+                    {/* Image Unsplash placée en dessous */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">IMAGE UNSPLASH</Label>
