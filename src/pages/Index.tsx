@@ -18,9 +18,8 @@ import ShortcutsModal from '@/components/ShortcutsModal';
 import QuickTaskBar from '@/components/QuickTaskBar';
 import EmptyState from '@/components/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Zap, CheckCircle2 } from 'lucide-react';
+import { Timer, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -112,9 +111,6 @@ const Index = () => {
       `)
       .eq('is_archived', false);
     
-    // On ne filtre pas les complétées ici pour pouvoir calculer la progression
-    // mais on respecte le réglage utilisateur pour l'affichage final
-
     if (activeList === 'important') query = query.eq('is_important', true);
     else if (activeList === 'planned') query = query.not('due_date', 'is', null);
     else if (activeList === 'my-day') query = query.is('list_id', null);
@@ -173,7 +169,6 @@ const Index = () => {
     }
   };
 
-  // Filtrage intelligent
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -181,7 +176,6 @@ const Index = () => {
     return matchesSearch && matchesCompletion;
   });
 
-  // Calcul de progression
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.is_completed).length;
   const listProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
@@ -207,10 +201,18 @@ const Index = () => {
         />
       )}
       
-      <main className={cn(
-        "flex-1 flex flex-col relative overflow-hidden h-full transition-all duration-500",
-        currentList?.bg_color || "bg-[#F5F5F7]/40 dark:bg-black/20"
-      )}>
+      <main 
+        className={cn(
+          "flex-1 flex flex-col relative overflow-hidden h-full transition-all duration-500 bg-cover bg-center",
+          currentList?.bg_color || "bg-[#F5F5F7]/40 dark:bg-black/20"
+        )}
+        style={currentList?.bg_image ? { backgroundImage: `url(${currentList.bg_image})` } : {}}
+      >
+        {/* Overlay pour le contraste si une image est présente */}
+        {currentList?.bg_image && (
+          <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[2px]" />
+        )}
+
         <div className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
           <div className={cn(
             "flex-1 flex flex-col w-full h-full px-6 sm:px-10 pt-8 pb-32 overflow-y-auto custom-scrollbar",
@@ -219,19 +221,19 @@ const Index = () => {
             <header className={cn("mb-8 flex-none", settings?.compact_mode && "mb-4")}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white drop-shadow-sm">
                     {currentList?.name || (activeList === 'my-day' ? 'Ma journée' : activeList === 'important' ? 'Important' : activeList === 'planned' ? 'Planifié' : 'Tâches')}
                   </h1>
                   {totalTasks > 0 && (
                     <div className="flex items-center gap-3 mt-2">
-                      <div className="h-1.5 flex-1 max-w-[200px] bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-1.5 flex-1 max-w-[200px] bg-gray-200/50 dark:bg-white/10 rounded-full overflow-hidden backdrop-blur-md">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${listProgress}%` }}
-                          className="h-full bg-blue-500"
+                          className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                         />
                       </div>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                         {completedTasks}/{totalTasks} Faits
                       </span>
                     </div>
@@ -239,10 +241,10 @@ const Index = () => {
                 </div>
                 <div className="flex gap-3">
                   <ViewSwitcher currentView={viewType} onViewChange={handleViewChange} />
-                  <Button variant="ghost" size="icon" onClick={() => setIsShortcutsOpen(true)} className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm">
+                  <Button variant="ghost" size="icon" onClick={() => setIsShortcutsOpen(true)} className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm backdrop-blur-md">
                     <Zap className="w-5 h-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setIsTimerOpen(!isTimerOpen)} className={cn("rounded-full bg-white/50 dark:bg-white/5 shadow-sm", isTimerOpen && "bg-orange-500 text-white")}>
+                  <Button variant="ghost" size="icon" onClick={() => setIsTimerOpen(!isTimerOpen)} className={cn("rounded-full bg-white/50 dark:bg-white/5 shadow-sm backdrop-blur-md", isTimerOpen && "bg-orange-500 text-white")}>
                     <Timer className="w-5 h-5" />
                   </Button>
                 </div>

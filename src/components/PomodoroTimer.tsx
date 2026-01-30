@@ -28,8 +28,45 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
   const [isActive, setIsActive] = useState(false);
   const [ambience, setAmbience] = useState('none');
   const [volume, setVolume] = useState([50]);
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Mettre à jour le temps quand les réglages changent ou que le mode change
+  // Initialisation de l'audio
+  useEffect(() => {
+    audioRef.current = new Audio();
+    audioRef.current.loop = true;
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Gestion de la lecture audio
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const currentAmbience = AMBIENCES.find(a => a.id === ambience);
+    
+    if (ambience === 'none' || !currentAmbience?.url) {
+      audioRef.current.pause();
+    } else {
+      if (audioRef.current.src !== currentAmbience.url) {
+        audioRef.current.src = currentAmbience.url;
+      }
+      audioRef.current.volume = volume[0] / 100;
+      
+      // On ne joue que si le timer est actif ou si l'utilisateur vient de changer d'ambiance
+      if (isActive) {
+        audioRef.current.play().catch(e => console.log("Audio play blocked by browser", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [ambience, isActive, volume]);
+
+  // Mettre à jour le temps quand les réglages changent
   useEffect(() => {
     if (settings) {
       const workTime = (settings.pomodoro_work_duration || 25) * 60;
@@ -39,13 +76,6 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
       }
     }
   }, [settings, mode, isActive]);
-
-  // Appliquer l'ambiance par défaut des réglages
-  useEffect(() => {
-    if (settings?.focus_default_ambience && ambience === 'none') {
-      setAmbience(settings.focus_default_ambience);
-    }
-  }, [settings]);
 
   const totalTime = mode === 'work' 
     ? (settings?.pomodoro_work_duration || 25) * 60 
@@ -87,7 +117,6 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
       const newMode = mode === 'work' ? 'break' : 'work';
       setMode(newMode);
       
-      // Auto-start si activé dans les réglages
       if (settings?.pomodoro_auto_start) {
         setIsActive(true);
       }
