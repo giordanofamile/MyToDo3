@@ -8,12 +8,13 @@ import PomodoroTimer from '@/components/PomodoroTimer';
 import Dashboard from '@/components/Dashboard';
 import TagBadge from '@/components/TagBadge';
 import ShortcutsModal from '@/components/ShortcutsModal';
+import CalendarView from '@/components/CalendarView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   ArrowUpDown, 
   CheckCircle, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Trash2, 
   Sparkles, 
   Timer, 
@@ -23,7 +24,10 @@ import {
   Square,
   X,
   HelpCircle,
-  GripVertical
+  GripVertical,
+  Menu,
+  LayoutList,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,9 +39,11 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useIsMobile } from '@/hooks/use-mobile';
 import confetti from 'canvas-confetti';
 
 const Index = () => {
@@ -51,12 +57,15 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical' | 'manual'>('manual');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -134,11 +143,9 @@ const Index = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Mise à jour optimiste de l'UI
     setTasks(items);
     setSortBy('manual');
 
-    // Mise à jour en base de données
     const updates = items.map((task, index) => ({
       id: task.id,
       position: index
@@ -304,7 +311,7 @@ const Index = () => {
   return (
     <div className="flex h-screen bg-white dark:bg-[#1C1C1E] overflow-hidden font-sans antialiased transition-colors duration-500">
       <AnimatePresence>
-        {!isFocusMode && (
+        {!isFocusMode && !isMobile && (
           <motion.div
             initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -328,28 +335,56 @@ const Index = () => {
         {activeList === 'dashboard' ? (
           <Dashboard onClose={() => setActiveList('my-day')} />
         ) : (
-          <div className="max-w-4xl w-full mx-auto px-8 pt-16 pb-32 overflow-y-auto custom-scrollbar">
-            <header className="mb-12">
-              <div className="flex items-end justify-between mb-6">
-                <div>
+          <div className="max-w-4xl w-full mx-auto px-4 sm:px-8 pt-8 sm:pt-16 pb-32 overflow-y-auto custom-scrollbar">
+            <header className="mb-8 sm:mb-12">
+              <div className="flex items-center justify-between mb-6">
+                {isMobile && !isFocusMode && (
+                  <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm">
+                        <Menu className="w-5 h-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="p-0 w-72 border-none">
+                      <Sidebar 
+                        activeList={activeList} 
+                        setActiveList={(id) => { setActiveList(id); setIsMobileMenuOpen(false); }} 
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                      />
+                    </SheetContent>
+                  </Sheet>
+                )}
+                <div className="flex-1 ml-4 sm:ml-0">
                   <motion.h1 
                     key={activeList}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white"
+                    className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white"
                   >
                     {getTitle()}
                   </motion.h1>
-                  <p className="text-gray-500 dark:text-gray-400 mt-2 font-semibold text-lg">
+                  <p className="text-gray-500 dark:text-gray-400 mt-1 sm:mt-2 font-semibold text-sm sm:text-lg">
                     {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 sm:gap-2">
+                  {activeList === 'planned' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
+                      className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm"
+                      title="Changer de vue"
+                    >
+                      {viewMode === 'list' ? <CalendarDays className="w-5 h-5" /> : <LayoutList className="w-5 h-5" />}
+                    </Button>
+                  )}
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     onClick={() => setIsShortcutsOpen(true)}
-                    className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm"
+                    className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm hidden sm:flex"
                     title="Aide ( ? )"
                   >
                     <HelpCircle className="w-5 h-5 text-gray-400" />
@@ -469,60 +504,64 @@ const Index = () => {
               )}
             </header>
 
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="tasks">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps} 
-                    ref={provided.innerRef} 
-                    className="space-y-3"
-                  >
-                    {filteredTasks.map((task, index) => (
-                      <Draggable 
-                        key={task.id} 
-                        draggableId={task.id} 
-                        index={index}
-                        isDragDisabled={sortBy !== 'manual' || selectionMode}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={cn(
-                              "flex items-center gap-3 transition-all",
-                              snapshot.isDragging && "scale-105 z-50"
-                            )}
-                          >
-                            {selectionMode ? (
-                              <button 
-                                onClick={() => toggleSelection(task.id)}
-                                className="p-2 text-gray-400 hover:text-indigo-500 transition-colors"
-                              >
-                                {selectedIds.includes(task.id) ? <CheckSquare className="w-6 h-6 text-indigo-500" /> : <Square className="w-6 h-6" />}
-                              </button>
-                            ) : sortBy === 'manual' && (
-                              <div {...provided.dragHandleProps} className="p-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing">
-                                <GripVertical className="w-4 h-4" />
+            {activeList === 'planned' && viewMode === 'calendar' ? (
+              <CalendarView tasks={tasks} onTaskClick={setSelectedTask} />
+            ) : (
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="tasks">
+                  {(provided) => (
+                    <div 
+                      {...provided.droppableProps} 
+                      ref={provided.innerRef} 
+                      className="space-y-3"
+                    >
+                      {filteredTasks.map((task, index) => (
+                        <Draggable 
+                          key={task.id} 
+                          draggableId={task.id} 
+                          index={index}
+                          isDragDisabled={sortBy !== 'manual' || selectionMode}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={cn(
+                                "flex items-center gap-2 sm:gap-3 transition-all",
+                                snapshot.isDragging && "scale-105 z-50"
+                              )}
+                            >
+                              {selectionMode ? (
+                                <button 
+                                  onClick={() => toggleSelection(task.id)}
+                                  className="p-2 text-gray-400 hover:text-indigo-500 transition-colors"
+                                >
+                                  {selectedIds.includes(task.id) ? <CheckSquare className="w-6 h-6 text-indigo-500" /> : <Square className="w-6 h-6" />}
+                                </button>
+                              ) : sortBy === 'manual' && (
+                                <div {...provided.dragHandleProps} className="p-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing hidden sm:block">
+                                  <GripVertical className="w-4 h-4" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <TaskItem
+                                  task={task}
+                                  onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })}
+                                  onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })}
+                                  onDelete={deleteTask}
+                                  onClick={setSelectedTask}
+                                />
                               </div>
-                            )}
-                            <div className="flex-1">
-                              <TaskItem
-                                task={task}
-                                onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })}
-                                onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })}
-                                onDelete={deleteTask}
-                                onClick={setSelectedTask}
-                              />
                             </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            )}
             
             {!loading && filteredTasks.length === 0 && (
               <motion.div 
@@ -531,7 +570,7 @@ const Index = () => {
                 className="text-center py-32"
               >
                 <div className="w-24 h-24 bg-white/50 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl border border-white dark:border-white/10">
-                  {activeList === 'planned' ? <Calendar className="w-10 h-10 text-gray-300" /> : <Plus className="w-10 h-10 text-gray-300" />}
+                  {activeList === 'planned' ? <CalendarIcon className="w-10 h-10 text-gray-300" /> : <Plus className="w-10 h-10 text-gray-300" />}
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                   {activeList === 'planned' ? 'Rien de prévu' : 'Prêt à commencer ?'}
@@ -550,7 +589,7 @@ const Index = () => {
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               exit={{ y: 100 }}
-              className="absolute bottom-32 left-0 right-0 px-8 z-40"
+              className="absolute bottom-32 left-0 right-0 px-4 sm:px-8 z-40"
             >
               <div className="max-w-md mx-auto bg-indigo-600 text-white p-4 rounded-[2rem] shadow-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3 ml-2">
@@ -581,28 +620,28 @@ const Index = () => {
         </AnimatePresence>
 
         {activeList !== 'dashboard' && (
-          <div className="absolute bottom-10 left-0 right-0 px-8">
+          <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 px-4 sm:px-8">
             <div className="max-w-4xl mx-auto">
               <form 
                 onSubmit={addTask}
-                className="bg-white/70 dark:bg-[#2C2C2E]/80 backdrop-blur-3xl p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 flex items-center gap-3"
+                className="bg-white/70 dark:bg-[#2C2C2E]/80 backdrop-blur-3xl p-2 sm:p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/50 dark:border-white/10 flex items-center gap-2 sm:gap-3"
               >
-                <div className="p-2.5 bg-blue-500/10 rounded-2xl text-blue-600">
-                  <Plus className="w-6 h-6" />
+                <div className="p-2 sm:p-2.5 bg-blue-500/10 rounded-2xl text-blue-600">
+                  <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <Input 
                   ref={inputRef}
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="Ajouter une tâche... (N)"
-                  className="border-none bg-transparent focus-visible:ring-0 text-xl placeholder:text-gray-400 dark:text-white h-14 font-medium"
+                  placeholder={isMobile ? "Ajouter..." : "Ajouter une tâche... (N)"}
+                  className="border-none bg-transparent focus-visible:ring-0 text-lg sm:text-xl placeholder:text-gray-400 dark:text-white h-12 sm:h-14 font-medium"
                 />
                 <Button 
                   type="submit"
                   disabled={!newTask.trim()}
-                  className="bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 text-white rounded-2xl px-8 h-12 transition-all font-bold shadow-lg"
+                  className="bg-black dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 text-white rounded-2xl px-4 sm:px-8 h-10 sm:h-12 transition-all font-bold shadow-lg"
                 >
-                  Ajouter
+                  {isMobile ? <Plus className="w-5 h-5" /> : "Ajouter"}
                 </Button>
               </form>
             </div>
