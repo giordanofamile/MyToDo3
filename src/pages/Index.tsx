@@ -6,8 +6,22 @@ import TaskItem from '@/components/TaskItem';
 import TaskDetails from '@/components/TaskDetails';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import Dashboard from '@/components/Dashboard';
+import TagBadge from '@/components/TagBadge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, LayoutGrid, ArrowUpDown, CheckCircle, Calendar, Trash2, Sparkles, Timer, Maximize2, Minimize2 } from 'lucide-react';
+import { 
+  Plus, 
+  ArrowUpDown, 
+  CheckCircle, 
+  Calendar, 
+  Trash2, 
+  Sparkles, 
+  Timer, 
+  Maximize2, 
+  Minimize2,
+  CheckSquare,
+  Square,
+  X
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
@@ -30,9 +44,12 @@ const Index = () => {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'created' | 'importance' | 'alphabetical'>('created');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,7 +71,6 @@ const Index = () => {
     }
   }, [session, activeList]);
 
-  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -66,12 +82,15 @@ const Index = () => {
         setIsFocusMode(prev => !prev);
       } else if (e.key.toLowerCase() === 'p') {
         setIsTimerOpen(prev => !prev);
+      } else if (e.key === 'Escape' && selectionMode) {
+        setSelectionMode(false);
+        setSelectedIds([]);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectionMode]);
 
   const fetchLists = async () => {
     const { data } = await supabase.from('lists').select('*');
@@ -159,6 +178,33 @@ const Index = () => {
     }
   };
 
+  const handleBatchAction = async (action: 'complete' | 'delete') => {
+    if (selectedIds.length === 0) return;
+
+    if (action === 'delete' && !confirm(`Supprimer les ${selectedIds.length} tâches sélectionnées ?`)) return;
+
+    const { error } = action === 'complete' 
+      ? await supabase.from('tasks').update({ is_completed: true }).in('id', selectedIds)
+      : await supabase.from('tasks').delete().in('id', selectedIds);
+
+    if (error) showError(error.message);
+    else {
+      if (action === 'complete') {
+        setTasks(tasks.map(t => selectedIds.includes(t.id) ? { ...t, is_completed: true } : t));
+        showSuccess(`${selectedIds.length} tâches terminées`);
+      } else {
+        setTasks(tasks.filter(t => !selectedIds.includes(t.id)));
+        showSuccess(`${selectedIds.length} tâches supprimées`);
+      }
+      setSelectionMode(false);
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
   const clearCompleted = async () => {
     const completedIds = tasks.filter(t => t.is_completed).map(t => t.id);
     if (completedIds.length === 0) return;
@@ -172,15 +218,20 @@ const Index = () => {
     }
   };
 
+  const allTags = Array.from(new Set(tasks.flatMap(t => t.tags || [])));
+
   const sortedTasks = [...tasks].sort((a, b) => {
     if (sortBy === 'importance') return (b.is_important ? 1 : 0) - (a.is_important ? 1 : 0);
     if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  const filteredTasks = sortedTasks.filter(task => 
-    task.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTasks = sortedTasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         task.tags?.some((t: string) => `#${t.toLowerCase()}`.includes(searchQuery.toLowerCase()));
+    const matchesTag = !selectedTag || task.tags?.includes(selectedTag);
+    return matchesSearch && matchesTag;
+  });
 
   const completedCount = tasks.filter(t => t.is_completed).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
@@ -248,6 +299,18 @@ const Index = () => {
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    onClick={() => setSelectionMode(!selectionMode)}
+                    className={cn(
+                      "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
+                      selectionMode && "bg-indigo-500 text-white hover:bg-indigo-600"
+                    )}
+                    title="Mode Sélection"
+                  >
+                    <CheckSquare className="w-5 h-5" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
                     onClick={() => setIsFocusMode(!isFocusMode)}
                     className={cn(
                       "rounded-full bg-white/50 dark:bg-white/5 shadow-sm transition-all",
@@ -269,17 +332,6 @@ const Index = () => {
                   >
                     <Timer className="w-5 h-5" />
                   </Button>
-                  {completedCount > 0 && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={clearCompleted}
-                      className="rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all"
-                      title="Supprimer les terminées"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </Button>
-                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-full bg-white/50 dark:bg-white/5 shadow-sm">
@@ -294,6 +346,34 @@ const Index = () => {
                   </DropdownMenu>
                 </div>
               </div>
+
+              {allTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <button
+                    onClick={() => setSelectedTag(null)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all",
+                      !selectedTag ? "bg-black text-white dark:bg-white dark:text-black" : "bg-gray-200/50 dark:bg-white/5 text-gray-500"
+                    )}
+                  >
+                    Tous
+                  </button>
+                  {allTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                    >
+                      <TagBadge 
+                        tag={tag} 
+                        className={cn(
+                          "cursor-pointer",
+                          selectedTag === tag ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-black" : "opacity-60 hover:opacity-100"
+                        )} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {tasks.length > 0 && (
                 <motion.div 
@@ -333,14 +413,25 @@ const Index = () => {
             <div className="space-y-3">
               <AnimatePresence mode="popLayout">
                 {filteredTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })}
-                    onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })}
-                    onDelete={deleteTask}
-                    onClick={setSelectedTask}
-                  />
+                  <div key={task.id} className="flex items-center gap-3">
+                    {selectionMode && (
+                      <button 
+                        onClick={() => toggleSelection(task.id)}
+                        className="p-2 text-gray-400 hover:text-indigo-500 transition-colors"
+                      >
+                        {selectedIds.includes(task.id) ? <CheckSquare className="w-6 h-6 text-indigo-500" /> : <Square className="w-6 h-6" />}
+                      </button>
+                    )}
+                    <div className="flex-1">
+                      <TaskItem
+                        task={task}
+                        onToggle={(t) => updateTask(t.id, { is_completed: !t.is_completed })}
+                        onToggleImportant={(t) => updateTask(t.id, { is_important: !t.is_important })}
+                        onDelete={deleteTask}
+                        onClick={setSelectedTask}
+                      />
+                    </div>
+                  </div>
                 ))}
               </AnimatePresence>
               
@@ -364,6 +455,42 @@ const Index = () => {
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {selectionMode && selectedIds.length > 0 && (
+            <motion.div 
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              exit={{ y: 100 }}
+              className="absolute bottom-32 left-0 right-0 px-8 z-40"
+            >
+              <div className="max-w-md mx-auto bg-indigo-600 text-white p-4 rounded-[2rem] shadow-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3 ml-2">
+                  <span className="font-bold">{selectedIds.length} sélectionnés</span>
+                  <button onClick={() => { setSelectionMode(false); setSelectedIds([]); }} className="p-1 hover:bg-white/10 rounded-full">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="ghost" 
+                    className="hover:bg-white/10 text-white rounded-xl"
+                    onClick={() => handleBatchAction('complete')}
+                  >
+                    Terminer
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="hover:bg-red-500 text-white rounded-xl"
+                    onClick={() => handleBatchAction('delete')}
+                  >
+                    Supprimer
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {activeList !== 'dashboard' && (
           <div className="absolute bottom-10 left-0 right-0 px-8">

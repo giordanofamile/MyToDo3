@@ -17,7 +17,8 @@ import {
   Book,
   Plane,
   Settings2,
-  BarChart3
+  BarChart3,
+  User as UserIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +26,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import ListDialog from './ListDialog';
+import ProfileDialog from './ProfileDialog';
 
 const ICON_MAP: Record<string, any> = {
   Hash, Briefcase, ShoppingCart, Heart, Star, Music, Book, Plane
@@ -40,7 +42,9 @@ interface SidebarProps {
 const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: SidebarProps) => {
   const [customLists, setCustomLists] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [isListDialogOpen, setIsListDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<any>(null);
   const { theme, setTheme } = useTheme();
 
@@ -52,6 +56,16 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
   const fetchUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+    if (user) fetchProfile(user.id);
+  };
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    setProfile(data);
   };
 
   const fetchLists = async () => {
@@ -117,6 +131,10 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
     { id: 'planned', label: 'Planifié', icon: Calendar, color: 'text-teal-500' },
     { id: 'tasks', label: 'Tâches', icon: Hash, color: 'text-blue-600' },
   ];
+
+  const displayName = profile?.first_name 
+    ? `${profile.first_name} ${profile.last_name || ''}`.trim() 
+    : user?.email?.split('@')[0];
 
   return (
     <div className="w-72 h-screen bg-[#F5F5F7]/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border-r border-gray-200/50 dark:border-white/10 flex flex-col p-6 transition-colors duration-500">
@@ -211,18 +229,24 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
       </div>
 
       <div className="pt-6 mt-auto border-t border-gray-200/50 dark:border-white/10">
-        <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+        <div 
+          onClick={() => setIsProfileDialogOpen(true)}
+          className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+        >
           <Avatar className="h-10 w-10 border-2 border-white dark:border-white/10 shadow-sm">
             <AvatarImage src={`https://avatar.vercel.sh/${user?.email}`} />
             <AvatarFallback className="bg-blue-500 text-white">
-              {user?.email?.charAt(0).toUpperCase()}
+              {displayName?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.email?.split('@')[0]}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{displayName}</p>
             <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
           </div>
-          <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+          <button 
+            onClick={(e) => { e.stopPropagation(); handleLogout(); }} 
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
@@ -233,6 +257,12 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery }: Sid
         onClose={() => { setIsListDialogOpen(false); setEditingList(null); }}
         onSave={handleSaveList}
         initialData={editingList}
+      />
+
+      <ProfileDialog
+        isOpen={isProfileDialogOpen}
+        onClose={() => setIsProfileDialogOpen(false)}
+        onUpdate={() => fetchUser()}
       />
     </div>
   );
