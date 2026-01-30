@@ -110,29 +110,33 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
               <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
-            <div className="h-[450px] px-1">
-              <TabsContent value="general" className="space-y-8 mt-0 h-full animate-in fade-in-50 duration-300">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">NOM DE LA LISTE</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Ex: Projet Alpha"
-                    className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none text-lg font-semibold shadow-sm focus-visible:ring-2 focus-visible:ring-[#3B82F6]/20"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">DESCRIPTION</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Ajoutez un contexte..."
-                    className="min-h-[140px] rounded-2xl bg-white dark:bg-white/5 border-none resize-none p-4 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-[#3B82F6]/20"
-                  />
-                </div>
+            <div className="px-1">
+              <TabsContent value="general" className="mt-0 animate-in fade-in-50 duration-300">
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-8 py-2">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">NOM DE LA LISTE</Label>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Ex: Projet Alpha"
+                        className="h-14 rounded-2xl bg-white dark:bg-white/5 border-none text-lg font-semibold shadow-sm focus-visible:ring-2 focus-visible:ring-[#3B82F6]/20"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">DESCRIPTION</Label>
+                      <Textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Ajoutez un contexte..."
+                        className="min-h-[140px] rounded-2xl bg-white dark:bg-white/5 border-none resize-none p-4 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-[#3B82F6]/20"
+                      />
+                    </div>
+                  </div>
+                </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="appearance" className="mt-0 h-full flex flex-col animate-in fade-in-50 duration-300">
+              <TabsContent value="appearance" className="mt-0 animate-in fade-in-50 duration-300">
                 <div className="flex items-center gap-3 bg-white dark:bg-white/5 rounded-2xl px-4 h-12 shadow-sm mb-6">
                   <Search className="w-4 h-4 text-[#94A3B8]" />
                   <input 
@@ -142,7 +146,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                     onChange={(e) => setIconSearch(e.target.value)}
                   />
                 </div>
-                <ScrollArea className="flex-1 pr-4 custom-scrollbar">
+                <ScrollArea className="h-[340px] pr-4 custom-scrollbar">
                   <div className="space-y-8 pb-6">
                     {Object.entries(ICON_CATEGORIES).map(([category, icons]) => {
                       const filteredIcons = icons.filter(i => i.toLowerCase().includes(iconSearch.toLowerCase()));
@@ -173,7 +177,7 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                     })}
                   </div>
                 </ScrollArea>
-                <div className="pt-4 border-t border-[#E2E8F0] dark:border-white/5 mt-auto">
+                <div className="pt-4 border-t border-[#E2E8F0] dark:border-white/5">
                   <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                     {COLORS.map((color) => (
                       <button
@@ -190,9 +194,9 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
                 </div>
               </TabsContent>
 
-              <TabsContent value="background" className="mt-0 h-full flex flex-col animate-in fade-in-50 duration-300">
-                <ScrollArea className="flex-1 pr-4 custom-scrollbar">
-                  <div className="space-y-8 py-1 pb-6">
+              <TabsContent value="background" className="mt-0 animate-in fade-in-50 duration-300">
+                <ScrollArea className="h-[400px] pr-4 custom-scrollbar">
+                  <div className="space-y-8 py-2 pb-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
                         <Palette className="w-4 h-4 text-[#3B82F6]" />
