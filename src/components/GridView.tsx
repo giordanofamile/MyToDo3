@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, Clock, Paperclip, CheckCircle2, Circle } from 'lucide-react';
+import { Star, Clock, Paperclip, CheckCircle2, Circle, AlignLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
@@ -47,9 +47,9 @@ const GridView = ({ tasks, onTaskClick, onToggleComplete }: GridViewProps) => {
           </div>
 
           <div className="p-6 flex-1 flex flex-col">
-            <div className="flex items-start justify-between gap-2 mb-3">
+            <div className="flex items-start justify-between gap-2 mb-2">
               <h4 className={cn(
-                "font-bold text-lg leading-tight dark:text-white line-clamp-2",
+                "font-bold text-lg leading-tight dark:text-white line-clamp-1",
                 task.is_completed && "text-gray-400 line-through"
               )}>
                 {task.title}
@@ -57,8 +57,13 @@ const GridView = ({ tasks, onTaskClick, onToggleComplete }: GridViewProps) => {
               {task.is_important && <Star className="w-5 h-5 text-pink-500 fill-current flex-shrink-0" />}
             </div>
 
+            {task.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 leading-relaxed">
+                {task.description}
+              </p>
+            )}
+
             <div className="mt-auto space-y-4">
-              {/* Progress Bar Placeholder (Simulated based on subtasks if available) */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <span>Progression</span>
@@ -75,9 +80,11 @@ const GridView = ({ tasks, onTaskClick, onToggleComplete }: GridViewProps) => {
                       {format(new Date(task.due_date), 'd MMM', { locale: fr })}
                     </div>
                   )}
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
-                    <Paperclip className="w-3 h-3" />
-                    2
+                  <div className={cn(
+                    "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter",
+                    task.status === 'En cours' ? "bg-blue-500/10 text-blue-500" : "bg-gray-100 dark:bg-white/10 text-gray-400"
+                  )}>
+                    {task.status || 'Attente'}
                   </div>
                 </div>
                 

@@ -13,7 +13,7 @@ import {
   PieChart,
   Pie
 } from 'recharts';
-import { CheckCircle2, Clock, Target, TrendingUp, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Clock, Target, TrendingUp, ArrowLeft, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, subDays, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -27,7 +27,7 @@ const Dashboard = ({ onClose }: DashboardProps) => {
     completedToday: 0,
     totalFocusTime: 0,
     weeklyData: [],
-    listDistribution: []
+    statusDistribution: []
   });
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const Dashboard = ({ onClose }: DashboardProps) => {
     
     const totalFocus = focusSessions?.reduce((acc, s) => acc + s.duration_minutes, 0) || 0;
 
-    // 3. Données hebdomadaires (7 derniers jours)
+    // 3. Données hebdomadaires
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       return {
@@ -75,21 +75,27 @@ const Dashboard = ({ onClose }: DashboardProps) => {
       if (day) day.tasks++;
     });
 
-    // 4. Répartition par liste
-    const { data: lists } = await supabase.from('lists').select('id, name, color');
-    const { data: tasksByList } = await supabase.from('tasks').select('list_id');
-    
-    const distribution = lists?.map(list => ({
-      name: list.name,
-      value: tasksByList?.filter(t => t.list_id === list.id).length || 0,
-      color: list.color?.replace('text-', '') || 'blue-500'
-    })).filter(d => d.value > 0) || [];
+    // 4. Répartition par Statut
+    const { data: tasks } = await supabase.from('tasks').select('status');
+    const statusCounts: Record<string, number> = {};
+    tasks?.forEach(t => {
+      const s = t.status || 'En attente';
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+
+    const statusData = Object.entries(statusCounts).map(([name, value]) => ({
+      name,
+      value,
+      color: name === 'En cours' ? '#3B82F6' : 
+             name === 'Terminé' ? '#10B981' : 
+             name === 'En pause' ? '#F59E0B' : '#94A3B8'
+    }));
 
     setStats({
       completedToday: completedToday || 0,
       totalFocusTime: totalFocus,
       weeklyData: last7Days,
-      listDistribution: distribution
+      statusDistribution: statusData
     });
   };
 
@@ -102,7 +108,7 @@ const Dashboard = ({ onClose }: DashboardProps) => {
       <div className="flex items-center justify-between mb-12">
         <div>
           <h2 className="text-4xl font-black tracking-tight dark:text-white">Insights</h2>
-          <p className="text-gray-500 font-medium mt-1">Votre voyage vers la productivité</p>
+          <p className="text-gray-500 font-medium mt-1">Analyse de votre productivité</p>
         </div>
         <Button variant="ghost" onClick={onClose} className="rounded-full h-12 w-12 p-0">
           <ArrowLeft className="w-6 h-6" />
@@ -160,20 +166,23 @@ const Dashboard = ({ onClose }: DashboardProps) => {
         </div>
 
         <div className="bg-white dark:bg-white/5 p-8 rounded-[3rem] shadow-sm border border-gray-100 dark:border-white/10">
-          <h4 className="text-xl font-bold mb-8 dark:text-white">Répartition par Liste</h4>
+          <div className="flex items-center justify-between mb-8">
+            <h4 className="text-xl font-bold dark:text-white">Répartition par Statut</h4>
+            <Activity className="w-5 h-5 text-blue-500" />
+          </div>
           <div className="h-64 w-full flex items-center justify-center">
-            {stats.listDistribution.length > 0 ? (
+            {stats.statusDistribution.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={stats.listDistribution}
+                    data={stats.statusDistribution}
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={8}
                     dataKey="value"
                   >
-                    {stats.listDistribution.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={`var(--${entry.color})`} />
+                    {stats.statusDistribution.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip />
