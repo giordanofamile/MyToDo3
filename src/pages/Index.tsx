@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { addDays, addWeeks, addMonths, format } from 'date-fns';
 import confetti from 'canvas-confetti';
 
 const Index = () => {
@@ -146,6 +147,32 @@ const Index = () => {
     }
   };
 
+  const handleRecurrence = async (task: any) => {
+    if (!task.recurrence || task.recurrence === 'none') return;
+
+    let nextDate = task.due_date ? new Date(task.due_date) : new Date();
+    if (task.recurrence === 'daily') nextDate = addDays(nextDate, 1);
+    else if (task.recurrence === 'weekly') nextDate = addWeeks(nextDate, 1);
+    else if (task.recurrence === 'monthly') nextDate = addMonths(nextDate, 1);
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([{
+        ...task,
+        id: undefined,
+        is_completed: false,
+        due_date: nextDate.toISOString(),
+        created_at: undefined,
+        updated_at: undefined
+      }])
+      .select();
+
+    if (!error && data) {
+      setTasks(prev => [data[0], ...prev]);
+      showSuccess(`Nouvelle occurrence créée pour ${format(nextDate, 'd MMM')}`);
+    }
+  };
+
   const updateTask = async (id: string, updates: any) => {
     const { error } = await supabase.from('tasks').update(updates).eq('id', id);
     if (error) showError(error.message);
@@ -154,6 +181,9 @@ const Index = () => {
       setTasks(updatedTasks);
       
       if (updates.is_completed === true) {
+        const task = tasks.find(t => t.id === id);
+        if (task) handleRecurrence(task);
+
         const allCompleted = updatedTasks.length > 0 && updatedTasks.every(t => t.is_completed);
         if (allCompleted) {
           confetti({
@@ -203,19 +233,6 @@ const Index = () => {
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const clearCompleted = async () => {
-    const completedIds = tasks.filter(t => t.is_completed).map(t => t.id);
-    if (completedIds.length === 0) return;
-    if (!confirm(`Supprimer les ${completedIds.length} tâches terminées ?`)) return;
-
-    const { error } = await supabase.from('tasks').delete().in('id', completedIds);
-    if (error) showError(error.message);
-    else {
-      setTasks(tasks.filter(t => !t.is_completed));
-      showSuccess(`${completedIds.length} tâches supprimées`);
-    }
   };
 
   const allTags = Array.from(new Set(tasks.flatMap(t => t.tags || [])));
@@ -318,7 +335,7 @@ const Index = () => {
                     )}
                     title="Mode Focus (F)"
                   >
-                    {isFocusMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+                    {isFocusMode ? <Maximize2 className="w-5 h-5" /> : <Minimize2 className="w-5 h-5" />}
                   </Button>
                   <Button 
                     variant="ghost" 

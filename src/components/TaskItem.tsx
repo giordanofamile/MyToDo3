@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo } from 'lucide-react';
+import { CheckCircle2, Circle, Star, Trash2, Calendar, FileText, ListTodo, RefreshCw, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import TagBadge from './TagBadge';
+import { Progress } from '@/components/ui/progress';
 
 interface TaskItemProps {
   task: any;
@@ -37,6 +38,8 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
     }
   };
 
+  const progress = subtaskStats.total > 0 ? (subtaskStats.completed / subtaskStats.total) * 100 : 0;
+
   return (
     <motion.div
       layout
@@ -66,34 +69,41 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onDelete, onClick }: Task
             {task.title}
           </p>
           <div className="flex gap-1 overflow-hidden">
+            {task.recurrence && task.recurrence !== 'none' && (
+              <RefreshCw className="w-3 h-3 text-blue-400 animate-spin-slow" />
+            )}
             {task.tags?.slice(0, 2).map((tag: string) => (
               <TagBadge key={tag} tag={tag} className="px-1.5 py-0" />
             ))}
-            {task.tags?.length > 2 && (
-              <span className="text-[9px] text-gray-400 font-bold">+{task.tags.length - 2}</span>
-            )}
           </div>
         </div>
+        
         <div className="flex items-center gap-3 mt-1">
-          <span className="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Tâches</span>
-          
           {subtaskStats.total > 0 && (
-            <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded-md">
-              <ListTodo className="w-3 h-3" />
-              {subtaskStats.completed}/{subtaskStats.total}
+            <div className="flex items-center gap-2 flex-1 max-w-[100px]">
+              <Progress value={progress} className="h-1 bg-gray-100 dark:bg-white/5" />
+              <span className="text-[9px] font-bold text-gray-400">{subtaskStats.completed}/{subtaskStats.total}</span>
             </div>
           )}
 
-          {task.due_date && (
-            <div className={cn(
-              "flex items-center gap-1 text-[11px] font-medium",
-              isOverdue ? "text-red-500" : "text-blue-500 dark:text-blue-400"
-            )}>
-              <Calendar className="w-3 h-3" />
-              {format(new Date(task.due_date), 'eee d MMM', { locale: fr })}
-            </div>
-          )}
-          {task.notes && <FileText className="w-3 h-3 text-gray-400 dark:text-gray-500" />}
+          <div className="flex items-center gap-3">
+            {task.estimated_minutes > 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-orange-500 font-bold">
+                <Clock className="w-3 h-3" />
+                {task.estimated_minutes}m
+              </div>
+            )}
+
+            {task.due_date && (
+              <div className={cn(
+                "flex items-center gap-1 text-[10px] font-bold",
+                isOverdue ? "text-red-500" : "text-blue-500 dark:text-blue-400"
+              )}>
+                <Calendar className="w-3 h-3" />
+                {format(new Date(task.due_date), 'eee d MMM', { locale: fr })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

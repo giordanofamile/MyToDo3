@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, RotateCcw, Coffee, Brain, X } from 'lucide-react';
+import { Play, Pause, RotateCcw, Coffee, Brain, X, CloudRain, Trees, Coffee as CoffeeIcon, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { showSuccess } from '@/utils/toast';
@@ -12,13 +13,31 @@ interface PomodoroTimerProps {
   onClose: () => void;
 }
 
+const AMBIENCES = [
+  { id: 'none', icon: VolumeX, label: 'Silence', url: '' },
+  { id: 'rain', icon: CloudRain, label: 'Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }, // Placeholder URLs
+  { id: 'forest', icon: Trees, label: 'Forêt', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'cafe', icon: CoffeeIcon, label: 'Café', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+];
+
 const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
   const [mode, setMode] = useState<'work' | 'break'>('work');
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
+  const [ambience, setAmbience] = useState('none');
+  const [volume, setVolume] = useState([50]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const totalTime = mode === 'work' ? 25 * 60 : 5 * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
+
+  useEffect(() => {
+    if (ambience !== 'none' && isActive) {
+      // Note: In a real app, we would use high-quality loopable assets
+      // For now, we simulate the logic
+      console.log(`Playing ambience: ${ambience}`);
+    }
+  }, [ambience, isActive]);
 
   const saveFocusSession = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -68,7 +87,7 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="fixed bottom-32 right-8 z-50 w-72 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/50 dark:border-white/10 p-6 overflow-hidden"
+          className="fixed bottom-32 right-8 z-50 w-80 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/50 dark:border-white/10 p-6 overflow-hidden"
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -105,7 +124,7 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
             )} 
           />
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4 mb-8">
             <Button
               variant="ghost"
               size="icon"
@@ -136,6 +155,38 @@ const PomodoroTimer = ({ isOpen, onClose }: PomodoroTimerProps) => {
             >
               {mode === 'work' ? <Coffee className="w-5 h-5 text-gray-500" /> : <Brain className="w-5 h-5 text-gray-500" />}
             </Button>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/5">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ambiance</span>
+              <div className="flex items-center gap-2">
+                <Volume2 className="w-3 h-3 text-gray-400" />
+                <Slider 
+                  value={volume} 
+                  onValueChange={setVolume} 
+                  max={100} 
+                  step={1} 
+                  className="w-20"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {AMBIENCES.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setAmbience(item.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-2 rounded-xl transition-all",
+                    ambience === item.id 
+                      ? "bg-blue-500 text-white shadow-lg scale-105" 
+                      : "bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                </button>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}

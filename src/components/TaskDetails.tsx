@@ -2,9 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon, Star, Trash2, X, Plus, Circle, CheckCircle2, Tag as TagIcon } from 'lucide-react';
+import { 
+  Calendar as CalendarIcon, 
+  Star, 
+  Trash2, 
+  X, 
+  Plus, 
+  Circle, 
+  CheckCircle2, 
+  Tag as TagIcon,
+  RefreshCw,
+  Clock
+} from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -114,8 +126,42 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Récurrence</label>
+                <Select 
+                  value={task.recurrence || 'none'} 
+                  onValueChange={(val) => onUpdate(task.id, { recurrence: val })}
+                >
+                  <SelectTrigger className="rounded-xl bg-white border-gray-100 h-11">
+                    <RefreshCw className="w-4 h-4 mr-2 text-blue-500" />
+                    <SelectValue placeholder="Aucune" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-none shadow-2xl">
+                    <SelectItem value="none">Aucune</SelectItem>
+                    <SelectItem value="daily">Quotidien</SelectItem>
+                    <SelectItem value="weekly">Hebdomadaire</SelectItem>
+                    <SelectItem value="monthly">Mensuel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Estimation</label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-3.5 w-4 h-4 text-orange-500" />
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    className="w-full h-11 pl-10 rounded-xl bg-white border border-gray-100 focus:ring-2 focus:ring-blue-500/20 text-sm"
+                    value={task.estimated_minutes || ''}
+                    onChange={(e) => onUpdate(task.id, { estimated_minutes: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-3">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-2">ÉTAPES</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">ÉTAPES</label>
               <div className="space-y-2">
                 {subtasks.map((sub) => (
                   <div key={sub.id} className="flex items-center gap-3 bg-white/50 p-3 rounded-xl group">
@@ -150,7 +196,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-2">TAGS</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">TAGS</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {task.tags?.map((tag: string) => (
                   <TagBadge key={tag} tag={tag} onRemove={removeTag} />
@@ -168,7 +214,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-2">ÉCHÉANCE</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">ÉCHÉANCE</label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -194,7 +240,7 @@ const TaskDetails = ({ task, isOpen, onClose, onUpdate, onDelete }: TaskDetailsP
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-2">NOTES</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">NOTES</label>
               <Textarea
                 placeholder="Ajouter une note..."
                 className="min-h-[120px] rounded-2xl bg-white border-gray-100 shadow-sm focus-visible:ring-blue-500 resize-none p-4"

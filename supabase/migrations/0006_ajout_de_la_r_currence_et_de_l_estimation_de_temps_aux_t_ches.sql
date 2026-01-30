@@ -1,0 +1,3 @@
+ALTER TABLE public.tasks 
+ADD COLUMN IF NOT EXISTS recurrence TEXT DEFAULT 'none',
+ADD COLUMN IF NOT EXISTS estimated_minutes INTEGER DEFAULT 0;
