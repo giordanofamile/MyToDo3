@@ -47,7 +47,6 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Écouteur pour le Drag & Drop depuis la sidebar
   useEffect(() => {
     const handleTaskMoved = () => {
       fetchTasks();
@@ -56,7 +55,6 @@ const Index = () => {
     return () => window.removeEventListener('task-moved', handleTaskMoved);
   }, [activeList]);
 
-  // Raccourcis Clavier Globaux
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -103,7 +101,15 @@ const Index = () => {
   const fetchTasks = async () => {
     if (activeList === 'dashboard') return;
     setLoading(true);
-    let query = supabase.from('tasks').select('*').eq('is_archived', false);
+    
+    // On récupère les tâches avec le compte des sous-tâches
+    let query = supabase
+      .from('tasks')
+      .select(`
+        *,
+        subtasks:subtasks(count)
+      `)
+      .eq('is_archived', false);
     
     if (!settings?.tasks_show_completed) {
       query = query.eq('is_completed', false);
@@ -115,8 +121,16 @@ const Index = () => {
     else if (activeList !== 'tasks' && activeList !== 'calendar') query = query.eq('list_id', activeList);
     
     const { data, error } = await query.order('position', { ascending: true });
+    
     if (error) showError(error.message);
-    else setTasks(data || []);
+    else {
+      // On formate les données pour extraire le count
+      const formattedTasks = data?.map(t => ({
+        ...t,
+        subtask_count: t.subtasks?.[0]?.count || 0
+      }));
+      setTasks(formattedTasks || []);
+    }
     setLoading(false);
   };
 
@@ -138,7 +152,7 @@ const Index = () => {
     const { data, error } = await supabase.from('tasks').insert([newTask]).select();
     if (error) showError(error.message);
     else {
-      setTasks([data[0], ...tasks]);
+      setTasks([{ ...data[0], subtask_count: 0 }, ...tasks]);
       if (!taskData) setSelectedTask(data[0]);
     }
   };

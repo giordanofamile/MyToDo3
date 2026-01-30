@@ -89,7 +89,6 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
     setEditingList(null);
   };
 
-  // --- Logique Drag & Drop ---
   const onDragStart = (e: React.DragEvent, id: string, type: 'list' | 'task') => {
     e.dataTransfer.setData('id', id);
     e.dataTransfer.setData('type', type);
@@ -111,24 +110,35 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
 
     try {
       if (type === 'list') {
-        // Déplacer une liste dans une autre (hiérarchie)
         const { error } = await supabase
           .from('lists')
-          .update({ parent_id: targetListId })
+          .update({ parent_id: targetListId === 'root' ? null : targetListId })
           .eq('id', id);
         if (error) throw error;
         showSuccess("Hiérarchie mise à jour");
         onListsUpdate();
       } else if (type === 'task') {
-        // Déplacer une tâche dans une liste
+        let updates: any = {};
+        
+        // Gestion intelligente des listes spéciales
+        if (targetListId === 'important') {
+          updates.is_important = true;
+        } else if (targetListId === 'my-day') {
+          updates.list_id = null;
+        } else if (['planned', 'calendar', 'tasks', 'dashboard'].includes(targetListId)) {
+          // On ne change rien de spécial pour ces vues globales
+        } else {
+          updates.list_id = targetListId;
+        }
+
         const { error } = await supabase
           .from('tasks')
-          .update({ list_id: targetListId })
+          .update(updates)
           .eq('id', id);
+        
         if (error) throw error;
         showSuccess("Tâche déplacée");
         fetchCounts();
-        // On déclenche un rafraîchissement global via un événement personnalisé ou en rechargeant les tâches si nécessaire
         window.dispatchEvent(new CustomEvent('task-moved'));
       }
     } catch (error: any) {
@@ -275,7 +285,7 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
               onClick={() => setActiveList(item.id)}
               onDragOver={(e) => onDragOver(e, item.id)}
               onDragLeave={() => setDragOverId(null)}
-              onDrop={(e) => onDrop(e, item.id === 'my-day' ? '' : item.id)}
+              onDrop={(e) => onDrop(e, item.id)}
               className={cn(
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-lg transition-all duration-200",
                 activeList === item.id ? "bg-white dark:bg-white/10 shadow-sm text-black dark:text-white" : "text-gray-500 hover:bg-white/50 dark:hover:bg-white/5",
@@ -300,21 +310,10 @@ const Sidebar = ({ activeList, setActiveList, searchQuery, setSearchQuery, lists
           </div>
           {renderListTree()}
           
-          {/* Zone de dépôt pour remettre une liste à la racine */}
           <div 
             onDragOver={(e) => onDragOver(e, 'root')}
             onDragLeave={() => setDragOverId(null)}
-            onDrop={async (e) => {
-              e.preventDefault();
-              setDragOverId(null);
-              const id = e.dataTransfer.getData('id');
-              const type = e.dataTransfer.getData('type');
-              if (type === 'list') {
-                await supabase.from('lists').update({ parent_id: null }).eq('id', id);
-                onListsUpdate();
-                showSuccess("Liste déplacée à la racine");
-              }
-            }}
+            onDrop={(e) => onDrop(e, 'root')}
             className={cn(
               "h-8 border-2 border-dashed border-transparent rounded-lg flex items-center justify-center transition-all",
               dragOverId === 'root' && "border-blue-500 bg-blue-500/5"

@@ -7,7 +7,8 @@ import {
   Calendar, 
   AlignLeft,
   Clock,
-  GripVertical
+  GripVertical,
+  CheckSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -89,7 +90,7 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
         {!compact && (
           <div className="flex items-center gap-3">
             {task.description && (
-              <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 truncate max-w-[200px]">
+              <div className="flex items-center gap-1 text-[10px] font-medium text-gray-400 truncate max-w-[150px]">
                 <AlignLeft className="w-3 h-3" />
                 <span className="truncate">{task.description}</span>
               </div>
@@ -106,6 +107,13 @@ const TaskItem = ({ task, onToggle, onToggleImportant, onClick, compact }: TaskI
                 </div>
               )}
               
+              {task.subtask_count > 0 && (
+                <div className="flex items-center gap-1 text-gray-400">
+                  <CheckSquare className="w-3 h-3" />
+                  {task.subtask_count}
+                </div>
+              )}
+
               {task.estimated_minutes > 0 && (
                 <div className="flex items-center gap-1 text-orange-500">
                   <Clock className="w-3 h-3" />
