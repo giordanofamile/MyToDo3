@@ -78,7 +78,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
 
   const fetchImages = async (category: string) => {
     setActiveCategory(category);
-    // Simulation d'images Unsplash avec des IDs variés pour éviter les doublons visuels
     const mockImages = Array.from({ length: 12 }, (_, i) => 
       `https://images.unsplash.com/photo-${1500000000000 + (i * 1234567) + (category.length * 1000)}?auto=format&fit=crop&w=400&q=80`
     );
@@ -91,7 +90,6 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     if (!formData.name.trim()) return;
     onSave(formData);
     onClose();
@@ -105,14 +103,14 @@ const ListDialog = ({ isOpen, onClose, onSave, initialData }: ListDialogProps) =
             {initialData?.id ? 'Configurer la liste' : formData.parent_id ? 'Nouvelle sous-liste' : 'Nouvelle liste'}
           </DialogTitle>
           
-          <Tabs defaultValue="general" className="w-full flex flex-col">
+          <Tabs defaultValue="general" className="w-full">
             <TabsList className="w-full justify-start bg-transparent border-none h-auto p-0 mb-8 gap-8">
               <TabsTrigger value="general" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">GÉNÉRAL</TabsTrigger>
               <TabsTrigger value="appearance" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">APPARENCE</TabsTrigger>
               <TabsTrigger value="background" className="data-[state=active]:text-[#3B82F6] data-[state=active]:bg-transparent data-[state=active]:shadow-none p-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#94A3B8]">IMMERSION</TabsTrigger>
             </TabsList>
 
-            <div className="h-[400px] relative">
+            <div className="h-[420px] overflow-hidden">
               <TabsContent value="general" className="space-y-8 mt-0 h-full animate-in fade-in-50 duration-300">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#94A3B8]">NOM DE LA LISTE</Label>
