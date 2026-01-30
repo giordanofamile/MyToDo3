@@ -15,6 +15,7 @@ import ReportsView from '@/components/ReportsView';
 import ViewSwitcher, { ViewType } from '@/components/ViewSwitcher';
 import ZenFocus from '@/components/ZenFocus';
 import ShortcutsModal from '@/components/ShortcutsModal';
+import QuickTaskBar from '@/components/QuickTaskBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -109,11 +110,14 @@ const Index = () => {
     setLoading(false);
   };
 
-  const createNewTask = async () => {
+  const createNewTask = async (taskData?: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const newTask = {
+    const newTask = taskData ? {
+      ...taskData,
+      user_id: user.id,
+    } : {
       title: "Nouvelle tâche",
       user_id: user.id,
       list_id: ['my-day', 'important', 'planned', 'tasks', 'dashboard', 'calendar'].includes(activeList) ? null : activeList,
@@ -125,7 +129,7 @@ const Index = () => {
     if (error) showError(error.message);
     else {
       setTasks([data[0], ...tasks]);
-      setSelectedTask(data[0]);
+      if (!taskData) setSelectedTask(data[0]);
     }
   };
 
@@ -195,7 +199,7 @@ const Index = () => {
               </div>
             </header>
 
-            <div className="flex-1 w-full h-full min-h-0">
+            <div className="flex-1 w-full h-full min-0 pb-32">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${activeList}-${viewType}`}
@@ -220,7 +224,7 @@ const Index = () => {
                   ) : viewType === 'reports' ? (
                     <ReportsView tasks={tasks} />
                   ) : (
-                    <div className={cn("space-y-3 w-full pb-20", settings?.compact_mode && "space-y-1.5")}>
+                    <div className={cn("space-y-3 w-full", settings?.compact_mode && "space-y-1.5")}>
                       {tasks.map((task) => (
                         <TaskItem 
                           key={task.id} 
@@ -232,12 +236,6 @@ const Index = () => {
                           compact={settings?.compact_mode}
                         />
                       ))}
-                      <button 
-                        onClick={createNewTask}
-                        className="w-full py-4 border-2 border-dashed border-gray-200 dark:border-white/5 rounded-[2rem] text-gray-400 font-bold text-sm hover:border-blue-500/30 hover:text-blue-500 transition-all"
-                      >
-                        + Ajouter une tâche (N)
-                      </button>
                     </div>
                   )}
                 </motion.div>
@@ -245,6 +243,11 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Barre de saisie rapide */}
+        {!['dashboard', 'reports'].includes(activeList) && (
+          <QuickTaskBar onAdd={createNewTask} activeList={activeList} />
+        )}
 
         <TaskDetails 
           task={selectedTask} 
